@@ -1,0 +1,35 @@
+.person-actions {
+  display: grid;
+  gap: 8px;
+  margin: 0 14px 14px;
+  padding: 12px;
+  border: 1px solid #35434f;
+  border-radius: 8px;
+  background: #18232c;
+}
+
+.person-actions label {
+  font-size: 12px;
+  color: #a9b8c2;
+}
+
+.person-actions select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #35434f;
+  border-radius: 6px;
+  background: #222d37;
+  color: #e8edf1;
+  font: inherit;
+}
+
+.person-actions button {
+  font-size: 12px;
+}
+
+.person-actions button:disabled,
+.person-actions select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

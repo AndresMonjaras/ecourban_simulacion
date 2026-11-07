@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ChangeEvent } from "react";
 import SceneCanvas from "./components/scene/SceneCanvas.tsx";
+import type { WalkCommand } from "./types/humanMotion.ts";
+import { planWalkToBench } from "./utils/humanMotion.ts";
+import PersonActions from "./components/scene/PersonActions.tsx";
 import { createInitialSceneState, sceneReducer } from "./stores/sceneReducer.ts";
 import { crearIdEscena, crearObjetoEscena } from "./utils/sceneFactory.ts";
 import { parseSceneDocument, serializeSceneDocument } from "./utils/sceneDocument.ts";
@@ -35,6 +38,7 @@ function App() {
   const [preview, setPreview] = useState<Vector3 | null>(null);
   const [cameraView, setCameraView] = useState<CameraView>("iso");
   const [focusRequest, setFocusRequest] = useState<{ kind: "bench" | "object"; objectId?: string; nonce: number } | null>(null);
+  const [walkCommand, setWalkCommand] = useState<WalkCommand | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
   const historia = useRef(createSceneHistory());
   const transformacionActiva = useRef<string | null>(null);
@@ -68,10 +72,39 @@ function App() {
     localStorage.setItem(STORAGE_KEY, serializeSceneDocument(state.objects));
   }, [state.objects]);
 
+  const iniciarCaminata = useCallback((personaId: string | null) => {
+    const persona = state.objects.find((object) => object.id === personaId);
+    if (!persona || persona.type !== "person") { setAviso("Selecciona a la persona para iniciar la caminata."); return; }
+    if (walkCommand) return;
+    if (persona.transform.position[2] > 0.3) { setAviso("La persona ya está sentada. Bájala al suelo para volver a caminar."); return; }
+    const bancasVisibles = state.objects.filter((object) => object.visible && object.type === "bench");
+    const bancos = bancasVisibles.filter((object) => !getBenchDependents(object, state.objects).some((dependent) => dependent.type === "person"));
+    if (bancos.length === 0) { setAviso(bancasVisibles.length > 0 ? "Todas las bancas visibles ya están ocupadas." : "Agrega una banca antes de iniciar la caminata."); return; }
+    const banca = bancos.reduce((closest, candidate) => {
+      const distance = Math.hypot(candidate.transform.position[0] - persona.transform.position[0], candidate.transform.position[1] - persona.transform.position[1]);
+      const bestDistance = Math.hypot(closest.transform.position[0] - persona.transform.position[0], closest.transform.position[1] - persona.transform.position[1]);
+      return distance < bestDistance ? candidate : closest;
+    });
+    const command = planWalkToBench(persona, banca);
+    transformacionActiva.current = null;
+    setWalkCommand(command);
+    setAviso(`Caminando hacia ${banca.name}…`);
+  }, [state.objects, walkCommand]);
+
   useEffect(() => {
     const tecla = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { dispatch({ type: "setPlacement", objectType: null }); setPreview(null); }
       const esCampoTexto = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || (event.target instanceof HTMLElement && event.target.isContentEditable);
+      if (event.key === "Escape" && walkCommand) {
+        setWalkCommand(null);
+        setAviso("Caminata cancelada.");
+        return;
+      }
+      if (event.key === "Escape") { dispatch({ type: "setPlacement", objectType: null }); setPreview(null); }
+      if (event.code === "KeyS" && event.shiftKey && !event.ctrlKey && !event.metaKey && !esCampoTexto && !event.repeat) {
+        iniciarCaminata(state.selectedId);
+        event.preventDefault();
+        return;
+      }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && !esCampoTexto) {
         event.preventDefault();
         const anterior = historia.current.undo();
@@ -88,7 +121,19 @@ function App() {
     };
     window.addEventListener("keydown", tecla);
     return () => window.removeEventListener("keydown", tecla);
-  }, [state.selectedId, dispatch]);
+  }, [state.selectedId, dispatch, walkCommand, iniciarCaminata]);
+
+  const completarCaminata = (command: WalkCommand) => {
+    if (!walkCommand || command.startedAt !== walkCommand.startedAt) return;
+    const persona = objetosActuales.current.find((object) => object.id === command.id);
+    if (persona) {
+      historia.current.save(objetosActuales.current);
+      dispatchBase({ type: "updateTransform", id: persona.id, transform: { ...persona.transform, position: command.seat, rotation: [persona.transform.rotation[0], persona.transform.rotation[1], command.seatYaw] } });
+      dispatchBase({ type: "updateObject", id: persona.id, changes: { properties: { ...persona.properties, posture: { ...POSTURA_PERSONA_DEFAULT } } } });
+    }
+    setWalkCommand(null);
+    setAviso("La persona llegó y se sentó en la banca.");
+  };
 
   const crear = (tipo: TipoObjeto, position: Vector3 = [0, 0, 0]) => {
     const objeto = crearObjetoEscena(tipo, crearIdEscena(), numero(tipo), position, tipo === "bench" ? ["asiento_01", "asiento_02", "asiento_03", "soporte_01", "soporte_02"] : []);
@@ -213,7 +258,7 @@ function App() {
     <section className="workspace">
       <aside className="sidebar library"><h2>Biblioteca</h2><p className="muted">Agregar objeto</p>
         {(Object.keys(labels) as TipoObjeto[]).map((tipo) => <article className="library-card" key={tipo}><div className={`object-icon ${tipo}`}>{tipo === "bench" ? "▰" : tipo === "person" ? "♙" : "◼"}</div><div><strong>{labels[tipo]}</strong><small>{tipo === "bench" ? "Modelo CAD · GLB" : tipo === "person" ? "75 kg · articulaciones editables" : "200 × 200 × 200 mm · 20 kg"}</small></div><button aria-label={`Agregar ${labels[tipo]}`} onClick={() => iniciarColocacion(tipo)}>+</button></article>)}
-        <div className="placement-help">{state.placementType ? <><b>Modo colocar</b><span>Haz clic en suelo o superficie para apoyar el objeto.</span><button onClick={() => { dispatch({ type: "setPlacement", objectType: null }); setPreview(null); }}>Cancelar · Esc</button></> : <span>Haz clic en un objeto para tomarlo y vuelve a hacer clic para soltarlo. Mantén W/A/S/D para recorrer la escena.</span>}</div>
+        <div className="placement-help">{state.placementType ? <><b>Modo colocar</b><span>Haz clic en suelo o superficie para apoyar el objeto.</span><button onClick={() => { dispatch({ type: "setPlacement", objectType: null }); setPreview(null); }}>Cancelar · Esc</button></> : <span>Haz clic para tomar o soltar objetos. W/A/S/D recorre la vista. Selecciona a la persona y pulsa <b>Mayús + S</b> para caminar a la banca y sentarse; <b>Esc</b> cancela.</span>}</div>
       </aside>
       <section className="viewport" aria-label="Vista 3D del escenario">
         <div className="viewport-toolbar"><span>ESCENARIO 3D</span><div className="camera-controls">
@@ -223,7 +268,7 @@ function App() {
           </div>
           <div className="camera-focus"><button onClick={() => solicitarEnfoque("bench")} disabled={!state.objects.some((object) => object.type === "bench")}>Centrar en banca</button><button onClick={() => seleccion && solicitarEnfoque("object", seleccion.id)} disabled={!seleccion}>Enfocar objeto seleccionado</button></div>
         </div></div>
-        <SceneCanvas state={state} cameraView={cameraView} preview={preview} focusRequest={focusRequest} onSelect={(id) => dispatch({ type: "select", id })} onPlace={ponerEnEscena} onPreview={resolverPreview} onTransformStart={iniciarTransformacion} onTransform={(id, position, rotation) => guardarTransformacion(id, position, rotation, false)} onRelease={(id, position, rotation, fallbackPosition) => guardarTransformacion(id, position, rotation, true, fallbackPosition)} onCancelHold={() => setAviso("Movimiento cancelado; objeto restaurado.")} onContext={(id, x, y) => dispatch({ type: "setContextMenu", menu: { objectId: id, x: Math.min(x, window.innerWidth - 190), y: Math.min(y, window.innerHeight - 160) } })} />
+        <SceneCanvas state={state} cameraView={cameraView} preview={preview} focusRequest={focusRequest} walkCommand={walkCommand} onWalkComplete={completarCaminata} onSelect={(id) => dispatch({ type: "select", id })} onPlace={ponerEnEscena} onPreview={resolverPreview} onTransformStart={iniciarTransformacion} onTransform={(id, position, rotation) => guardarTransformacion(id, position, rotation, false)} onRelease={(id, position, rotation, fallbackPosition) => guardarTransformacion(id, position, rotation, true, fallbackPosition)} onCancelHold={() => setAviso("Movimiento cancelado; objeto restaurado.")} onContext={(id, x, y) => dispatch({ type: "setContextMenu", menu: { objectId: id, x: Math.min(x, window.innerWidth - 190), y: Math.min(y, window.innerHeight - 160) } })} />
         {state.placementType && <div className="placement-banner">Colocando: {labels[state.placementType]} · WASD mueve la vista · Escape cancela{preview ? ` · X ${(preview[0] * 1000).toFixed(0)} mm / Y ${(preview[1] * 1000).toFixed(0)} mm / Z ${(preview[2] * 1000).toFixed(0)} mm` : ""}</div>}
         {state.contextMenu && <div className="context-backdrop" onClick={() => dispatch({ type: "setContextMenu", menu: null })}><div className="context-menu" style={{ left: state.contextMenu.x, top: state.contextMenu.y }} onClick={(event) => event.stopPropagation()}>
           <button onClick={() => dispatch({ type: "select", id: state.contextMenu!.objectId })}>Seleccionar · Propiedades</button>
@@ -232,7 +277,9 @@ function App() {
           <button onClick={() => dispatch({ type: "duplicate", id: state.contextMenu!.objectId, newId: crearIdEscena() })}>Duplicar</button><button onClick={() => dispatch({ type: "toggleVisibility", id: state.contextMenu!.objectId })}>Mostrar / ocultar</button><button className="danger" onClick={() => dispatch({ type: "remove", id: state.contextMenu!.objectId })}>Eliminar</button>
         </div></div>}
       </section>
-      <aside className="sidebar properties"><h2>Escena</h2><div className="scene-list">
+      <aside className="sidebar properties"><h2>Escena</h2>
+        <PersonActions objects={state.objects} selectedId={seleccion?.type === "person" ? seleccion.id : null} walking={Boolean(walkCommand)} onSelect={(id) => dispatch({ type: "select", id })} onWalk={iniciarCaminata} />
+        <div className="scene-list">
         {state.objects.length === 0 ? <p className="empty-state">Aún no hay objetos.<br />Agrégalos desde la biblioteca.</p> : state.objects.map((objeto) => <div className={`scene-row ${seleccion?.id === objeto.id ? "selected" : ""}`} key={objeto.id}><button className="select-object" onClick={() => dispatch({ type: "select", id: objeto.id })}><span className="row-dot" />{objeto.name}</button><button className="visibility" aria-label={`${objeto.visible ? "Ocultar" : "Mostrar"} ${objeto.name}`} onClick={() => dispatch({ type: "toggleVisibility", id: objeto.id })}>{objeto.visible ? "◉" : "○"}</button></div>)}
       </div>
       <div className="property-editor"><h2>Propiedades</h2>{seleccion ? <>

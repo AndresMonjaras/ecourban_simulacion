@@ -79,7 +79,9 @@ function crearPosePersona(
   const longitudMuslo = (sentada ? Math.min(0.42, Math.max(0.25, profundidadAsientoM * 0.94)) : 0.43) * sz;
   const hip = radianes(postura.hipFlexionDeg);
   const knee = radianes(postura.kneeFlexionDeg);
-  const alturaCadera = sentada ? 0.065 : 0.90;
+  // Raise the seated thigh line slightly above the plank to keep the skinned
+  // avatar's leg volume from clipping through the bench surface.
+  const alturaCadera = sentada ? 0.12 : 0.90;
   const kneeZ = alturaCadera - (longitudMuslo / sz) * Math.cos(hip);
   const ankleTargetZ = sentada ? -alturaAsientoM + 0.075 : 0.075;
   const diferenciaRodilla = hip - knee;

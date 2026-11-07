@@ -33,3 +33,7 @@ La colocación sobre la banca se comprueba con intersecciones del modelo bajo el
 npm test
 npm run build
 ```
+
+### Persona articulada
+
+La organización, los controles y el recorrido de la persona están documentados en [Animación de la persona](docs/animacion-persona.md).
