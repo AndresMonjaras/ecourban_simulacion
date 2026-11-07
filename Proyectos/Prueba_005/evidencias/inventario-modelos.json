@@ -1,0 +1,60 @@
+{
+  "pruebas_existentes": {
+    "Prueba_001": true,
+    "Prueba_002": true,
+    "Prueba_003": false,
+    "Prueba_004": true
+  },
+  "cad_ids": [
+    "asiento_01",
+    "asiento_02",
+    "asiento_03",
+    "asiento_04",
+    "asiento_05",
+    "respaldo_01",
+    "respaldo_02",
+    "respaldo_03",
+    "respaldo_04",
+    "soporte_izquierdo",
+    "costilla_izquierdo",
+    "soporte_derecho",
+    "costilla_derecho"
+  ],
+  "glb_node_names": [
+    "asiento_01",
+    "asiento_02",
+    "asiento_03",
+    "asiento_04",
+    "asiento_05",
+    "respaldo_01",
+    "respaldo_02",
+    "respaldo_03",
+    "respaldo_04",
+    "soporte_izquierdo",
+    "costilla_izquierdo",
+    "soporte_derecho",
+    "costilla_derecho"
+  ],
+  "component_ids": [
+    "asiento_01",
+    "asiento_02",
+    "asiento_03",
+    "asiento_04",
+    "asiento_05",
+    "respaldo_01",
+    "respaldo_02",
+    "respaldo_03",
+    "respaldo_04",
+    "soporte_izquierdo",
+    "costilla_izquierdo",
+    "soporte_derecho",
+    "costilla_derecho"
+  ],
+  "cad_glb_match": true,
+  "glb_mesh_count": 13,
+  "ids_inexistentes_en_metadatos_prueba004": [
+    "soporte_01",
+    "soporte_02"
+  ],
+  "surface_ids_exported": false
+}

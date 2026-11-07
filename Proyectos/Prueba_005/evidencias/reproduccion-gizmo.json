@@ -1,0 +1,159 @@
+{
+  "before": {
+    "control": true,
+    "handle": [
+      645.2919292925612,
+      550.5036439081657
+    ],
+    "origin": [
+      700.2527249661839,
+      549.7793856166519
+    ],
+    "attached": [
+      0,
+      0,
+      0
+    ],
+    "child": [
+      0,
+      0,
+      0
+    ],
+    "axis": null,
+    "dragging": false,
+    "saved": {
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  "hovered": {
+    "control": true,
+    "handle": [
+      645.2919292925612,
+      550.5036439081657
+    ],
+    "origin": [
+      700.2527249661839,
+      549.7793856166519
+    ],
+    "attached": [
+      0,
+      0,
+      0
+    ],
+    "child": [
+      0,
+      0,
+      0
+    ],
+    "axis": "X",
+    "dragging": false,
+    "saved": {
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  "during": {
+    "control": true,
+    "handle": [
+      637.8117947127907,
+      550.6022150701119
+    ],
+    "origin": [
+      692.7954663326811,
+      549.8776553256522
+    ],
+    "attached": [
+      0.06087773322743145,
+      0,
+      0
+    ],
+    "child": [
+      0,
+      0,
+      0
+    ],
+    "axis": null,
+    "dragging": true,
+    "saved": {
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  "after": {
+    "control": null,
+    "saved": {
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  "deselected": {
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ]
+  }
+}

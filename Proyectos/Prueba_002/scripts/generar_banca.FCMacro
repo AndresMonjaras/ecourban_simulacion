@@ -1,0 +1,98 @@
+import json
+import math
+import os
+import sys
+import traceback
+import FreeCAD as App
+import Part
+
+RAIZ = "/mnt/BancaPET/Proyectos/Prueba_002"
+with open(os.path.join(RAIZ, "config", "banca.json"), encoding="utf-8") as archivo:
+    CFG = json.load(archivo)["dimensiones"]
+sys.path.insert(0, os.path.join(RAIZ, "scripts"))
+import exportar_banca
+
+
+def agregar_pieza(doc, identificador, nombre, tipo, largo, ancho, alto, base, rotacion=None):
+    obj = doc.addObject("Part::Box", identificador)
+    obj.Length = largo
+    obj.Width = ancho
+    obj.Height = alto
+    giro = App.Rotation(App.Vector(1, 0, 0), rotacion or 0)
+    obj.Placement = App.Placement(App.Vector(*base), giro)
+    obj.Label = nombre
+    obj.addProperty("App::PropertyString", "ComponenteID", "BancaPET")
+    obj.ComponenteID = identificador
+    obj.addProperty("App::PropertyString", "TipoComponente", "BancaPET")
+    obj.TipoComponente = tipo
+    obj.addProperty("App::PropertyVector", "DimensionesNominalesMM", "BancaPET")
+    obj.DimensionesNominalesMM = App.Vector(largo, ancho, alto)
+    obj.addProperty("App::PropertyVector", "PosicionMM", "BancaPET")
+    obj.PosicionMM = App.Vector(*base)
+    obj.addProperty("App::PropertyFloat", "RotacionXGrados", "BancaPET")
+    obj.RotacionXGrados = rotacion or 0
+    return obj
+
+
+def ejecutar():
+    doc = App.newDocument("BancaPET_Prueba002")
+    p = CFG
+    L, D, H, HT = p["largo"], p["profundidad_asiento"], p["altura_asiento"], p["altura_total"]
+    esp, sep = p["espesor_tablon"], p["separacion"]
+    asiento_n, respaldo_n = p["tablones_asiento"], p["tablones_respaldo"]
+    ancho_asiento = (D - (asiento_n - 1) * sep) / asiento_n
+    paso = ancho_asiento + sep
+    piezas = []
+
+    # Los tablones se distribuyen en Y y su cara superior queda a la altura indicada.
+    for i in range(asiento_n):
+        y = -D / 2 + i * paso
+        piezas.append(agregar_pieza(doc, "asiento_%02d" % (i+1), "Tablón asiento %d" % (i+1), "asiento", L, ancho_asiento, esp, (-L/2, y, H-esp)))
+
+    # Cada tablón sube por un eje inclinado de 15 grados hacia atrás.
+    inclinacion = 180 - p["angulo_respaldo"]
+    subida = HT - H
+    largo_respaldo = subida / math.sin(math.radians(inclinacion))
+    ancho_respaldo = (largo_respaldo - (respaldo_n - 1) * sep) / respaldo_n
+    base_y, base_z = -D/2, H
+    paso_respaldo = ancho_respaldo + sep
+    for i in range(respaldo_n):
+        local_y = i * paso_respaldo
+        # La caja se rota alrededor de X; su lado ancho sigue la inclinación.
+        posicion = (-L/2, base_y-local_y*math.cos(math.radians(inclinacion)), base_z+local_y*math.sin(math.radians(inclinacion)))
+        piezas.append(agregar_pieza(doc, "respaldo_%02d" % (i+1), "Tablón respaldo %d" % (i+1), "respaldo", L, ancho_respaldo, esp,
+                                    posicion, p["angulo_respaldo"]))
+
+    soporte_x = L/2 - p["margen_lateral"] - p["ancho_soporte"]/2
+    # Paneles laterales rectangulares anchos que sostienen asiento y respaldo.
+    for lado, x in (("izquierdo", -soporte_x), ("derecho", soporte_x)):
+        extension_soporte = p["extension_soporte_lateral"]
+        profundidad_soporte = D + extension_soporte
+        piezas.append(agregar_pieza(doc, "soporte_"+lado, "Soporte lateral "+lado, "soporte_lateral", p["ancho_soporte"], profundidad_soporte, H-esp,
+                                    (x-p["ancho_soporte"]/2, -D/2-extension_soporte, 0)))
+        # La costilla continúa detrás de los tablones y baja hasta tocar el soporte.
+        extension_inferior = p["extension_inferior_costilla"]
+        angulo = math.radians(p["angulo_respaldo"])
+        inicio_y = base_y + extension_inferior*math.cos(math.radians(inclinacion)) - esp*math.sin(angulo)
+        inicio_z = base_z - extension_inferior*math.sin(math.radians(inclinacion)) + esp*math.cos(angulo)
+        largo_costilla = largo_respaldo + extension_inferior
+        piezas.append(agregar_pieza(doc, "costilla_"+lado, "Costilla inclinada "+lado, "estructura_respaldo", p["ancho_soporte"], largo_costilla, esp,
+                                    (x-p["ancho_soporte"]/2, inicio_y, inicio_z), p["angulo_respaldo"]))
+
+    doc.recompute()
+    for pieza in piezas:
+        if not pieza.Shape.isValid() or len(pieza.Shape.Solids) != 1:
+            raise RuntimeError("Geometría inválida: " + pieza.ComponenteID)
+    os.makedirs(os.path.join(RAIZ, "cad"), exist_ok=True)
+    os.makedirs(os.path.join(RAIZ, "modelos"), exist_ok=True)
+    doc.recompute()
+    doc.saveAs(os.path.join(RAIZ, "cad", "banca.FCStd"))
+    Part.export(piezas, os.path.join(RAIZ, "cad", "banca.step"))
+    exportar_banca.exportar_componentes(piezas, os.path.join(RAIZ, "modelos", "banca.glb"), os.path.join(RAIZ, "modelos", "componentes.json"), (L, D))
+    print("Piezas generadas: %d" % len(piezas))
+    print("Asiento: %d x %d mm; altura: %d mm; respaldo: %d grados" % (L, D, H, p["angulo_respaldo"]))
+
+try:
+    ejecutar()
+except Exception:
+    traceback.print_exc()

@@ -1,0 +1,339 @@
+:root {
+  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+  color: #e9f0f5;
+  background: #101923;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+  font-weight: 400;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 320px;
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+}
+
+.visor {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 54% 44%, rgba(64, 99, 122, 0.16), transparent 52%),
+    #101923;
+}
+
+.visor > div:first-child {
+  position: absolute !important;
+  inset: 0;
+}
+
+.panel {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid rgba(187, 213, 230, 0.13);
+  border-radius: 14px;
+  background: rgba(17, 29, 40, 0.83);
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(18px);
+}
+
+.encabezado {
+  top: 24px;
+  left: 28px;
+  right: 28px;
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.marca-punto {
+  width: 11px;
+  height: 36px;
+  border-radius: 6px;
+  background: #64c4b3;
+  box-shadow: 0 0 22px rgba(100, 196, 179, 0.4);
+}
+
+.sobrelinea,
+.etiqueta-panel {
+  margin: 0;
+  color: #91a8b8;
+  font-family: "Consolas", "Liberation Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+}
+
+h1 {
+  margin: 4px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+h1 span {
+  color: #6e8798;
+  font-weight: 400;
+}
+
+.estado-modelo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #b7c8d3;
+  font-family: "Consolas", "Liberation Mono", monospace;
+  font-size: 11px;
+}
+
+.estado-punto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #66d1a5;
+  box-shadow: 0 0 12px rgba(102, 209, 165, 0.7);
+}
+
+.herramientas {
+  top: 122px;
+  left: 28px;
+  width: min(310px, calc(100vw - 56px));
+  padding: 17px;
+}
+
+.botones-vista {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.boton-vista,
+.boton-reset {
+  min-height: 36px;
+  border: 1px solid rgba(187, 213, 230, 0.14);
+  border-radius: 8px;
+  color: #bdccd6;
+  background: rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.boton-vista {
+  font-size: 12px;
+}
+
+.boton-vista:hover,
+.boton-reset:hover {
+  border-color: rgba(108, 197, 184, 0.55);
+  color: #f2fbfa;
+}
+
+.boton-vista.activo {
+  border-color: rgba(108, 197, 184, 0.72);
+  color: #c2f0e8;
+  background: rgba(74, 158, 148, 0.2);
+}
+
+.boton-reset {
+  width: 100%;
+  margin-top: 9px;
+  font-size: 12px;
+}
+
+.ayuda-controles {
+  margin: 12px 0 0;
+  color: #8197a6;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.datos {
+  top: 122px;
+  right: 28px;
+  width: 255px;
+  padding: 18px;
+}
+
+.dimension-principal {
+  margin: 11px 0 16px;
+  color: #f1f6f9;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  white-space: nowrap;
+}
+
+.dimension-principal > span {
+  padding: 0 2px;
+  color: #688496;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.dimension-principal small {
+  margin-left: 3px;
+  color: #94aab8;
+  font-family: "Consolas", "Liberation Mono", monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.lista-dimensiones {
+  display: grid;
+  gap: 9px;
+}
+
+.lista-dimensiones > div {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  color: #9bafbc;
+  font-size: 11px;
+}
+
+.lista-dimensiones strong {
+  color: #d6e1e7;
+  font-family: "Consolas", "Liberation Mono", monospace;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.eje {
+  display: grid;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  border-radius: 5px;
+  font-family: "Consolas", "Liberation Mono", monospace;
+  font-size: 10px;
+}
+
+.eje-x { color: #ff8f8f; background: rgba(239, 103, 103, 0.16); }
+.eje-y { color: #86d2a2; background: rgba(90, 189, 120, 0.16); }
+.eje-z { color: #8ebcff; background: rgba(90, 141, 220, 0.18); }
+
+.origen {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(187, 213, 230, 0.12);
+  color: #859baa;
+  font-size: 10px;
+}
+
+.origen strong {
+  color: #c8d7e0;
+  font-family: "Consolas", "Liberation Mono", monospace;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.pie {
+  position: absolute;
+  z-index: 2;
+  right: 28px;
+  bottom: 20px;
+  left: 28px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  color: #8ba0ae;
+  font-family: "Consolas", "Liberation Mono", monospace;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.error-modelo {
+  position: absolute;
+  inset: 40% 20px auto;
+  z-index: 1;
+  padding: 14px 18px;
+  border: 1px solid rgba(239, 115, 115, 0.45);
+  border-radius: 10px;
+  color: #ffd8d8;
+  background: rgba(72, 28, 34, 0.92);
+  text-align: center;
+}
+
+.separador {
+  color: #4d697a;
+}
+
+@media (max-width: 760px) {
+  .encabezado {
+    top: 14px;
+    right: 14px;
+    left: 14px;
+    min-height: 66px;
+    padding: 12px 14px;
+  }
+
+  h1 { font-size: 14px; }
+  .estado-modelo { font-size: 0; }
+  .estado-punto { width: 8px; height: 8px; }
+
+  .herramientas {
+    top: auto;
+    bottom: 56px;
+    left: 14px;
+    width: min(290px, calc(100vw - 28px));
+    padding: 13px;
+  }
+
+  .datos {
+    top: 94px;
+    right: 14px;
+    width: 210px;
+    padding: 14px;
+  }
+
+  .dimension-principal { font-size: 19px; }
+
+  .pie {
+    right: 14px;
+    bottom: 18px;
+    left: auto;
+    font-size: 9px;
+  }
+
+  .pie span:nth-child(n + 3) { display: none; }
+}
+
+@media (max-width: 460px) {
+  .datos { width: 176px; }
+  .dimension-principal { font-size: 16px; }
+  .lista-dimensiones > div { grid-template-columns: 20px 1fr auto; gap: 5px; font-size: 10px; }
+  .lista-dimensiones strong { font-size: 9px; }
+}

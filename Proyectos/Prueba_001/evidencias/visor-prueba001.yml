@@ -1,0 +1,40 @@
+- main [ref=e3] [box=0,0,965,520]:
+  - generic [ref=e7] [box=28,24,909,76]:
+    - generic [ref=e10] [box=74,45,241,35]:
+      - paragraph [ref=e11] [box=74,45,241,11]: BANCA PET · LABORATORIO CAD
+      - heading "Prueba 001 · Cubo de referencia" [level=1] [ref=e12] [box=74,60,241,20]
+    - generic [ref=e13] [box=769,56,147,12]: GLB local · Z arriba
+  - region "Controles de cámara" [ref=e15] [box=28,122,310,225]:
+    - paragraph [ref=e16] [box=46,140,274,11]: VISTA
+    - generic [ref=e17] [box=46,163,274,79]:
+      - button "Frontal" [ref=e18] [cursor=pointer] [box=46,163,134,36]
+      - button "Lateral" [ref=e19] [cursor=pointer] [box=187,163,134,36]
+      - button "Superior" [ref=e20] [cursor=pointer] [box=46,206,134,36]
+      - button "Isométrica" [pressed] [ref=e21] [cursor=pointer] [box=187,206,134,36]
+    - button "Restablecer cámara a la vista isométrica" [ref=e22] [cursor=pointer] [box=46,251,274,36]: Restablecer vista
+    - paragraph [ref=e23] [box=46,299,274,30]: Arrastra para orbitar · rueda para zoom · botón derecho para paneo
+  - complementary "Dimensiones del modelo" [ref=e24] [box=682,122,255,234]:
+    - paragraph [ref=e25] [box=701,141,217,11]: DIMENSIONES
+    - paragraph [ref=e26] [box=701,163,217,27]: 100 × 100 × 100 mm
+    - generic [ref=e27] [box=701,206,217,75]:
+      - generic [ref=e28] [box=701,206,217,19]:
+        - generic [ref=e29] [box=701,206,19,19]: X
+        - generic [ref=e30] [box=731,210,143,12]: Largo
+        - strong [ref=e31] [box=882,210,36,11]: 100 mm
+      - generic [ref=e32] [box=701,234,217,19]:
+        - generic [ref=e33] [box=701,234,19,19]: "Y"
+        - generic [ref=e34] [box=731,238,143,12]: Ancho
+        - strong [ref=e35] [box=882,238,36,11]: 100 mm
+      - generic [ref=e36] [box=701,262,217,19]:
+        - generic [ref=e37] [box=701,262,19,19]: Z
+        - generic [ref=e38] [box=731,266,143,12]: Alto
+        - strong [ref=e39] [box=882,266,36,11]: 100 mm
+    - paragraph [ref=e40] [box=701,297,217,40]:
+      - text: Origen del modelo
+      - strong [ref=e41] [box=701,326,217,11]: (0, 0, 0) mm
+  - generic [box=28,489,909,11]:
+    - generic [box=279,489,96,11]: "Unidades CAD: mm"
+    - generic [aria-hidden] [box=385,489,6,11]: ·
+    - generic [box=401,489,66,11]: "GLB: metros"
+    - generic [aria-hidden] [box=477,489,6,11]: ·
+    - generic [box=493,489,193,11]: Arrastra el modelo para explorar

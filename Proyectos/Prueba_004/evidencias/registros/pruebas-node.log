@@ -1,0 +1,24 @@
+
+> bancapet-prueba-004-web@1.0.0 test
+> node --experimental-strip-types --test tests/*.test.ts
+
+✔ serializa y recupera un documento versionado sin perder transformaciones (3.238475ms)
+✔ rechaza referencias de modelo que no estén en la biblioteca permitida (0.89209ms)
+✔ rechaza IDs duplicados y valores no finitos antes de importar (0.670337ms)
+✔ rechaza versión y tamaño no soportados (0.553309ms)
+✔ crea los tres tipos con modelos, dimensiones y masas iniciales correctas (2.327651ms)
+✔ genera IDs únicos y con formato UUID (6.559013ms)
+✔ agrega objetos, selecciona por ID y rechaza IDs repetidos (1.255657ms)
+✔ duplica con ID nuevo y borrar esa copia preserva otros objetos (1.304987ms)
+✔ actualiza visibilidad sin alterar el resto de la escena (0.488409ms)
+✔ actualiza propiedades editables sin cambiar el ID ni otros objetos (0.396297ms)
+✔ convierte milímetros a metros y viceversa (1.480905ms)
+✔ convierte grados a radianes y viceversa (0.40276ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 180.803568

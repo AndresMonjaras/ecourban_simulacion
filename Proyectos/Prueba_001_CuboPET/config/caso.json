@@ -1,0 +1,113 @@
+{
+  "esquema": "bancapet_prueba_fem_v1",
+  "prueba": {
+    "id": "Prueba_001_CuboPET",
+    "nombre": "Cubo de PET reciclado, compresión estática lineal",
+    "fecha": "2026-11-06",
+    "estado": "Parámetros elásticos provisionales; no medidos en el lote BancaPET",
+    "descripcion": "Modelo sólido de 100 mm, cara inferior fija y presión uniforme descendente equivalente a 500 N en la cara superior."
+  },
+  "unidades": {
+    "sistema": "mm-N-MPa",
+    "longitud": "mm",
+    "fuerza": "N",
+    "presion_y_modulo": "MPa = N/mm²",
+    "densidad_solver": "t/mm³"
+  },
+  "geometria": {
+    "tipo": "cubo_solido",
+    "lado_mm": 100.0,
+    "volumen_mm3": 1000000.0,
+    "area_cara_mm2": 10000.0
+  },
+  "material": {
+    "nombre": "PET reciclado, modelo isotrópico elástico lineal provisional",
+    "advertencia": "Ningún valor representa una medición del lote BancaPET ni debe usarse para diseño.",
+    "propiedades": {
+      "E_MPa": {
+        "valor": 1743.5,
+        "unidad": "MPa",
+        "estado": "NO MEDIDO EN EL LOTE BancaPET",
+        "contexto": "Módulo de compresión promedio reportado para rPET fabricado por MEX con patrón concentric XY. Depende del proceso y orientación del estudio.",
+        "fuente": "Mercado-Colmenero et al., Using numerical-experimental analysis to evaluate rPET mechanical behavior under compressive stresses and MEX additive manufacturing for new sustainable designs.",
+        "url": "https://ruja.ujaen.es/bitstreams/bf7184ec-e860-49d4-bd8c-d21d9f0f607f/download"
+      },
+      "nu_adimensional": {
+        "valor": 0.38,
+        "unidad": "adimensional",
+        "estado": "NO MEDIDO EN EL LOTE BancaPET",
+        "contexto": "Supuesto isotrópico adoptado por el estudio citado; no es una medición directa del lote.",
+        "url": "https://ruja.ujaen.es/bitstreams/bf7184ec-e860-49d4-bd8c-d21d9f0f607f/download"
+      },
+      "rho_kg_m3": {
+        "valor": 1380.0,
+        "unidad": "kg/m³",
+        "estado": "NO MEDIDO EN EL LOTE BancaPET",
+        "contexto": "Dato comunicado por proveedor para una mezcla 65% rPET y 35% PET virgen; no necesariamente coincide con este cubo."
+      },
+      "rho_solver_t_mm3": {
+        "valor": 1.38e-9,
+        "unidad": "t/mm³",
+        "estado": "DERIVADO; NO MEDIDO EN EL LOTE BancaPET",
+        "calculo": "1380 kg/m³ × 1e-3 t/kg ÷ 1e9 mm³/m³",
+        "nota": "Se registra en el material. La densidad no afecta este análisis estático sin gravedad ni aceleración."
+      }
+    }
+  },
+  "carga": {
+    "fuerza_total_N": 500.0,
+    "direccion": "-Z, descendente",
+    "tipo": "presion_uniforme_normal_entrante",
+    "presion_equivalente_MPa": 0.05,
+    "calculo": "500 N / 10000 mm² = 0.05 N/mm² = 0.05 MPa",
+    "cara": "cara superior, Z = 100 mm"
+  },
+  "condiciones_contorno": {
+    "apoyo": "cara inferior, Z = 0 mm",
+    "tipo": "fijo en todos los grados de libertad",
+    "nota": "El apoyo fijo puede producir concentraciones locales de tensión en sus aristas. El máximo global de von Mises se reporta, pero no se interpreta como una propiedad del material."
+  },
+  "mallas": {
+    "tipo": "tetraedros sólidos cuadráticos de segundo orden",
+    "niveles": [
+      {"id": "M1", "tamano_max_mm": 20.0},
+      {"id": "M2", "tamano_max_mm": 10.0},
+      {"id": "M3", "tamano_max_mm": 5.0}
+    ],
+    "metrica_convergencia": "desplazamiento vertical nodal medio en la cara superior",
+    "tolerancia_relativa_M2_M3": 0.02,
+    "nota": "Se comparan también von Mises máximo global y en el centro superior; el máximo global puede crecer por la singularidad del apoyo."
+  },
+  "metadatos_ensayo": {
+    "temperatura_C": 25.0,
+    "tiempo_s": 60.0,
+    "uso": "Solo metadatos. No se modelan efectos térmicos, viscoelasticidad, creep ni dependencia temporal."
+  },
+  "referencia_analitica": {
+    "delta_mm": {
+      "formula": "F * L / (A * E)",
+      "resultado": 0.002867794,
+      "nota": "Barra uniaxial ideal; se compara con el promedio nodal vertical de la cara superior."
+    },
+    "sigma_MPa": {
+      "formula": "F / A",
+      "resultado": 0.05,
+      "nota": "Tensión nominal; se compara con von Mises muestreado cerca del centro de la cara superior."
+    }
+  },
+  "software": {
+    "freecad": "1.1.4 AppImage",
+    "gmsh": "4.15.0, incluido en el AppImage",
+    "calculix_ccx": "2.23, incluido en el AppImage"
+  },
+  "rutas": {
+    "raiz": "/mnt/BancaPET/Proyectos/Prueba_001_CuboPET",
+    "cad": "cad/",
+    "mallas": "mallas/",
+    "simulaciones": "simulaciones/",
+    "resultados": "resultados/",
+    "graficas": "graficas/",
+    "evidencias": "evidencias/",
+    "runtime": "/mnt/BancaPET/.runtime"
+  }
+}

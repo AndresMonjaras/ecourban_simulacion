@@ -1,0 +1,261 @@
+{
+  "version": 1,
+  "units": {
+    "position": "m",
+    "rotation": "rad",
+    "mass": "kg",
+    "dimensions": "mm"
+  },
+  "objects": [
+    {
+      "id": "09093a16-e78b-48ec-9451-4d44fc9abe1c",
+      "name": "Banca PET 01",
+      "type": "bench",
+      "modelId": "banca-p002",
+      "transform": {
+        "position": [
+          -0.6168507518027102,
+          0.9252761277040706,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "dimensionsMm": [
+        1500,
+        624.79,
+        850
+      ],
+      "properties": {},
+      "visible": true,
+      "metadata": {
+        "visualOnly": true,
+        "cadModelId": "banca-p002",
+        "materialId": null,
+        "componentIds": [
+          "asiento_01",
+          "asiento_02",
+          "asiento_03",
+          "soporte_01",
+          "soporte_02"
+        ],
+        "surfaceIds": [],
+        "contacts": [],
+        "loads": []
+      }
+    },
+    {
+      "id": "60492610-3e24-4f0d-acd5-aee2ebfb5f30",
+      "name": "Maniquí provisional 01",
+      "type": "person",
+      "modelId": "persona-maniqui-provisional",
+      "transform": {
+        "position": [
+          -1.0769348325718084,
+          -0.30394155179333726,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "dimensionsMm": [
+        450,
+        350,
+        1750
+      ],
+      "properties": {
+        "massKg": 75
+      },
+      "visible": true,
+      "metadata": {
+        "visualOnly": true,
+        "cadModelId": null,
+        "materialId": null,
+        "componentIds": [],
+        "surfaceIds": [],
+        "contacts": [],
+        "loads": []
+      }
+    },
+    {
+      "id": "be3c325d-2f83-4c2f-92eb-cf126374ae97",
+      "name": "Maniquí provisional 02",
+      "type": "person",
+      "modelId": "persona-maniqui-provisional",
+      "transform": {
+        "position": [
+          0.6947671372599284,
+          0.8771930947611493,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "dimensionsMm": [
+        450,
+        350,
+        1750
+      ],
+      "properties": {
+        "massKg": 75
+      },
+      "visible": true,
+      "metadata": {
+        "visualOnly": true,
+        "cadModelId": null,
+        "materialId": null,
+        "componentIds": [],
+        "surfaceIds": [],
+        "contacts": [],
+        "loads": []
+      }
+    },
+    {
+      "id": "360023e0-6a28-49c2-8cb7-0bb9b609a619",
+      "name": "Bloque de 20 kg 01",
+      "type": "weight",
+      "modelId": "bloque-200mm",
+      "transform": {
+        "position": [
+          -2.0002160089689323,
+          3.0003240134533797,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "dimensionsMm": [
+        200,
+        200,
+        200
+      ],
+      "properties": {
+        "massKg": 20
+      },
+      "visible": true,
+      "metadata": {
+        "visualOnly": true,
+        "cadModelId": null,
+        "materialId": null,
+        "componentIds": [],
+        "surfaceIds": [],
+        "contacts": [],
+        "loads": []
+      }
+    },
+    {
+      "id": "b1ce0865-b412-4665-abf3-1552f6897791",
+      "name": "Bloque de 20 kg 02",
+      "type": "weight",
+      "modelId": "bloque-200mm",
+      "transform": {
+        "position": [
+          -0.8133166534148923,
+          3.791590250489433,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "dimensionsMm": [
+        200,
+        200,
+        200
+      ],
+      "properties": {
+        "massKg": 20
+      },
+      "visible": true,
+      "metadata": {
+        "visualOnly": true,
+        "cadModelId": null,
+        "materialId": null,
+        "componentIds": [],
+        "surfaceIds": [],
+        "contacts": [],
+        "loads": []
+      }
+    },
+    {
+      "id": "a6cd5ee4-fad8-42b4-9098-b397534373a8",
+      "name": "Bloque de 20 kg 03",
+      "type": "weight",
+      "modelId": "bloque-200mm",
+      "transform": {
+        "position": [
+          0.58202941237762,
+          3.552488151190035,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "dimensionsMm": [
+        200,
+        200,
+        200
+      ],
+      "properties": {
+        "massKg": 20
+      },
+      "visible": true,
+      "metadata": {
+        "visualOnly": true,
+        "cadModelId": null,
+        "materialId": null,
+        "componentIds": [],
+        "surfaceIds": [],
+        "contacts": [],
+        "loads": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "unidades": "mm",
+  "coordenadas": {
+    "x": "largo",
+    "y": "profundidad; frente positivo",
+    "z": "altura"
+  },
+  "dimensiones": {
+    "largo": 1500,
+    "profundidad_asiento": 450,
+    "altura_asiento": 450,
+    "altura_total": 850,
+    "angulo_respaldo": 105,
+    "espesor_tablon": 35,
+    "separacion": 10,
+    "tablones_asiento": 5,
+    "tablones_respaldo": 4,
+    "ancho_soporte": 70,
+    "margen_lateral": 80,
+    "extension_soporte_lateral": 45,
+    "extension_inferior_costilla": 50
+  },
+  "material_visual": "PET reciclado azul",
+  "nota_geometrica": "El respaldo inclinado se extiende aproximadamente 107 mm detrás del borde posterior del asiento para conservar sus 400 mm de elevación a 105 grados. Modelo visual de referencia; no validado para cargas ni fabricación."
+}

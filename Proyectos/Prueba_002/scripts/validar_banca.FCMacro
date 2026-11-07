@@ -1,0 +1,83 @@
+import json
+import os
+import struct
+import traceback
+import FreeCAD as App
+
+RAIZ = "/mnt/BancaPET/Proyectos/Prueba_002"
+
+
+def ejecutar():
+    ruta_cad = os.path.join(RAIZ, "cad", "banca.FCStd")
+    ruta_glb = os.path.join(RAIZ, "modelos", "banca.glb")
+    ruta_json = os.path.join(RAIZ, "modelos", "componentes.json")
+    for ruta in (ruta_cad, os.path.join(RAIZ, "cad", "banca.step"), ruta_glb, ruta_json):
+        if not os.path.isfile(ruta) or os.path.getsize(ruta) == 0:
+            raise RuntimeError("Falta un archivo de entrega: " + ruta)
+    doc = App.openDocument(ruta_cad)
+    piezas = [o for o in doc.Objects if hasattr(o, "ComponenteID")]
+    ids = [o.ComponenteID for o in piezas]
+    if len(ids) < 10 or len(ids) != len(set(ids)):
+        raise RuntimeError("Cantidad insuficiente o IDs repetidos.")
+    for pieza in piezas:
+        if pieza.TypeId != "Part::Box" or not pieza.Shape.isValid() or len(pieza.Shape.Solids) != 1:
+            raise RuntimeError("Pieza inválida o no paramétrica: " + pieza.ComponenteID)
+    # Cambia y restaura una cota en memoria para verificar el enlace paramétrico.
+    prueba = next(p for p in piezas if p.ComponenteID == "asiento_01")
+    largo_original = prueba.Length.Value
+    prueba.Length = largo_original + 1.0
+    doc.recompute()
+    if abs(prueba.Shape.BoundBox.XLength - largo_original - 1.0) > 0.01:
+        raise RuntimeError("La propiedad Length no regeneró la forma.")
+    prueba.Length = largo_original
+    doc.recompute()
+    bb = piezas[0].Shape.BoundBox
+    for pieza in piezas[1:]:
+        bb.add(pieza.Shape.BoundBox)
+    if abs(bb.XLength - 1500) > 1 or abs(bb.ZLength - 850) > 2:
+        raise RuntimeError("Dimensiones generales inesperadas: %.2f x %.2f x %.2f" % (bb.XLength, bb.YLength, bb.ZLength))
+    with open(ruta_json, encoding="utf-8") as archivo:
+        metadatos = json.load(archivo)
+    if set(ids) != {p["id"] for p in metadatos["componentes"]}:
+        raise RuntimeError("Los identificadores CAD y JSON no coinciden.")
+    with open(ruta_glb, "rb") as archivo:
+        magic, version, longitud = struct.unpack("<4sII", archivo.read(12))
+        tamano_json, tipo_json = struct.unpack("<I4s", archivo.read(8))
+        gltf = json.loads(archivo.read(tamano_json).decode("utf-8"))
+        if magic != b"glTF" or version != 2 or longitud != os.path.getsize(ruta_glb) or tipo_json != b"JSON":
+            raise RuntimeError("Cabecera GLB 2.0 inválida.")
+    if sorted(n["name"] for n in gltf["nodes"]) != sorted(ids):
+        raise RuntimeError("Los nombres de nodo GLB no coinciden con los IDs CAD.")
+    step_path = os.path.join(RAIZ, "cad", "banca.step")
+    with open(step_path, encoding="latin-1", errors="ignore") as archivo:
+        texto_step = archivo.read()
+    solidos_step = texto_step.count("MANIFOLD_SOLID_BREP")
+    if solidos_step != len(piezas):
+        raise RuntimeError("STEP tiene %d sólidos; se esperaban %d." % (solidos_step, len(piezas)))
+    lineas = ["VALIDACIÓN CAD: OK", "Piezas paramétricas Part::Box: %d" % len(piezas), "Prueba Length y regeneración: OK",
+              "Bounding box: %.2f x %.2f x %.2f mm" % (bb.XLength, bb.YLength, bb.ZLength),
+              "Sólidos STEP: %d" % solidos_step, "IDs JSON: coinciden", "GLB 2.0: cabecera y tamaño correctos"]
+    # Lista las intersecciones para revisar uniones intencionales del ensamblaje.
+    esperadas = {frozenset(("soporte_izquierdo", "costilla_izquierdo")),
+                 frozenset(("soporte_derecho", "costilla_derecho"))}
+    encontradas = set()
+    for i, pieza_a in enumerate(piezas):
+        for pieza_b in piezas[i+1:]:
+            volumen = pieza_a.Shape.common(pieza_b.Shape).Volume
+            if volumen > 0.01:
+                pareja = frozenset((pieza_a.ComponenteID, pieza_b.ComponenteID))
+                if pareja not in esperadas:
+                    raise RuntimeError("Intersección no prevista: " + " / ".join(sorted(pareja)))
+                encontradas.add(pareja)
+                lineas.append("UNIÓN INTENCIONAL %.2f mm3: %s / %s" % (volumen, pieza_a.ComponenteID, pieza_b.ComponenteID))
+    if encontradas != esperadas:
+        raise RuntimeError("Falta contacto entre costillas y soportes laterales.")
+    with open(os.path.join(RAIZ, "evidencias", "validacion-cad.txt"), "w", encoding="utf-8") as salida:
+        salida.write("\n".join(lineas) + "\n")
+    print("\n".join(lineas))
+    App.closeDocument(doc.Name)
+
+try:
+    ejecutar()
+except Exception:
+    traceback.print_exc()

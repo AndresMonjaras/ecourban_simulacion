@@ -1,0 +1,11 @@
+{
+  "archivos_comparados": 102,
+  "archivos_modificados": [],
+  "excluded": [
+    "node_modules",
+    "dist",
+    ".cache",
+    ".agy-staff",
+    ".vite"
+  ]
+}

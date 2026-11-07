@@ -1,0 +1,244 @@
+import json
+import math
+import os
+import shutil
+import struct
+import traceback
+
+import FreeCAD as App
+import Part
+
+
+# La ruta fija mantiene todos los archivos de la prueba en el disco secundario.
+RAIZ_PROYECTO = "/mnt/BancaPET/Proyectos/Prueba_001"
+RUTA_CAD = os.path.join(RAIZ_PROYECTO, "cad")
+RUTA_MODELOS = os.path.join(RAIZ_PROYECTO, "modelos")
+RUTA_WEB_MODELOS = os.path.join(RAIZ_PROYECTO, "web", "public", "models")
+TAMANO_MM = 100.0
+ESCALA_GLTF = 0.001
+
+
+def asegurar_directorios():
+    os.makedirs(RUTA_CAD, exist_ok=True)
+    os.makedirs(RUTA_MODELOS, exist_ok=True)
+    os.makedirs(RUTA_WEB_MODELOS, exist_ok=True)
+
+
+def validar_cubo(objeto, tamano_mm):
+    forma = objeto.Shape
+    caja = forma.BoundBox
+
+    if not forma.isValid():
+        raise RuntimeError("La forma del cubo no es válida.")
+    if len(forma.Solids) != 1:
+        raise RuntimeError("El modelo debe contener exactamente un sólido.")
+
+    mitad = tamano_mm / 2.0
+    limites_esperados = (-mitad, mitad)
+    limites_reales = (
+        caja.XMin, caja.XMax,
+        caja.YMin, caja.YMax,
+        caja.ZMin, caja.ZMax,
+    )
+    limites_correctos = (
+        limites_esperados[0], limites_esperados[1],
+        limites_esperados[0], limites_esperados[1],
+        limites_esperados[0], limites_esperados[1],
+    )
+
+    for real, esperado in zip(limites_reales, limites_correctos):
+        if abs(real - esperado) > 1e-7:
+            raise RuntimeError("El cubo no está centrado o no coincide con su tamaño parametrizado.")
+
+
+def normalizar(vector):
+    largo = math.sqrt(vector[0] ** 2 + vector[1] ** 2 + vector[2] ** 2)
+    if largo < 1e-12:
+        raise RuntimeError("La triangulación contiene una cara degenerada.")
+    return (vector[0] / largo, vector[1] / largo, vector[2] / largo)
+
+
+def producto_cruz(a, b):
+    return (
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    )
+
+
+def alinear_cuatro(bytes_datos, relleno):
+    faltan = (-len(bytes_datos)) % 4
+    return bytes_datos + (relleno * faltan)
+
+
+def exportar_glb(forma, ruta_destino):
+    vertices, triangulos = forma.tessellate(0.1)
+    if not vertices or not triangulos:
+        raise RuntimeError("FreeCAD no produjo una malla para el GLB.")
+
+    posiciones = []
+    normales = []
+    indices = []
+
+    for triangulo in triangulos:
+        if len(triangulo) != 3:
+            raise RuntimeError("FreeCAD devolvió un triángulo con formato inesperado.")
+
+        a_mm = vertices[int(triangulo[0])]
+        b_mm = vertices[int(triangulo[1])]
+        c_mm = vertices[int(triangulo[2])]
+        a = (a_mm.x, a_mm.y, a_mm.z)
+        b = (b_mm.x, b_mm.y, b_mm.z)
+        c = (c_mm.x, c_mm.y, c_mm.z)
+
+        normal = normalizar(producto_cruz(
+            (b[0] - a[0], b[1] - a[1], b[2] - a[2]),
+            (c[0] - a[0], c[1] - a[1], c[2] - a[2]),
+        ))
+
+        centro = (
+            (a[0] + b[0] + c[0]) / 3.0,
+            (a[1] + b[1] + c[1]) / 3.0,
+            (a[2] + b[2] + c[2]) / 3.0,
+        )
+        if normal[0] * centro[0] + normal[1] * centro[1] + normal[2] * centro[2] < 0:
+            b, c = c, b
+            normal = (-normal[0], -normal[1], -normal[2])
+
+        for punto in (a, b, c):
+            posiciones.append(tuple(valor * ESCALA_GLTF for valor in punto))
+            normales.append(normal)
+            indices.append(len(indices))
+
+    bytes_posiciones = b"".join(struct.pack("<3f", *punto) for punto in posiciones)
+    bytes_normales = b"".join(struct.pack("<3f", *normal) for normal in normales)
+    bytes_indices = b"".join(struct.pack("<H", indice) for indice in indices)
+
+    bytes_posiciones = alinear_cuatro(bytes_posiciones, b"\x00")
+    bytes_normales = alinear_cuatro(bytes_normales, b"\x00")
+    bytes_indices = alinear_cuatro(bytes_indices, b"\x00")
+
+    inicio_posiciones = 0
+    inicio_normales = len(bytes_posiciones)
+    inicio_indices = inicio_normales + len(bytes_normales)
+    binario = bytes_posiciones + bytes_normales + bytes_indices
+    binario_chunk = alinear_cuatro(binario, b"\x00")
+
+    minimos = [min(punto[eje] for punto in posiciones) for eje in range(3)]
+    maximos = [max(punto[eje] for punto in posiciones) for eje in range(3)]
+    total_indices = len(indices)
+
+    documento_gltf = {
+        "asset": {"version": "2.0", "generator": "BancaPET FreeCAD"},
+        "scene": 0,
+        "scenes": [{"nodes": [0]}],
+        "nodes": [{"name": "Cubo_100mm", "mesh": 0}],
+        "meshes": [{
+            "name": "Cubo_100mm",
+            "primitives": [{
+                "attributes": {"POSITION": 0, "NORMAL": 1},
+                "indices": 2,
+                "material": 0,
+                "mode": 4,
+            }],
+        }],
+        "materials": [{
+            "name": "PET azul",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [0.18, 0.48, 0.78, 1.0],
+                "metallicFactor": 0.05,
+                "roughnessFactor": 0.62,
+            },
+        }],
+        "accessors": [
+            {
+                "bufferView": 0, "componentType": 5126,
+                "count": len(posiciones), "type": "VEC3",
+                "min": minimos, "max": maximos,
+            },
+            {
+                "bufferView": 1, "componentType": 5126,
+                "count": len(normales), "type": "VEC3",
+            },
+            {
+                "bufferView": 2, "componentType": 5123,
+                "count": total_indices, "type": "SCALAR",
+                "min": [min(indices)], "max": [max(indices)],
+            },
+        ],
+        "bufferViews": [
+            {"buffer": 0, "byteOffset": inicio_posiciones,
+             "byteLength": len(bytes_posiciones), "target": 34962},
+            {"buffer": 0, "byteOffset": inicio_normales,
+             "byteLength": len(bytes_normales), "target": 34962},
+            {"buffer": 0, "byteOffset": inicio_indices,
+             "byteLength": len(bytes_indices), "target": 34963},
+        ],
+        "buffers": [{"byteLength": len(binario)}],
+    }
+
+    json_chunk = json.dumps(documento_gltf, separators=(",", ":")).encode("utf-8")
+    json_chunk = alinear_cuatro(json_chunk, b" ")
+    longitud_total = 12 + 8 + len(json_chunk) + 8 + len(binario_chunk)
+
+    with open(ruta_destino, "wb") as archivo:
+        archivo.write(struct.pack("<4sII", b"glTF", 2, longitud_total))
+        archivo.write(struct.pack("<I4s", len(json_chunk), b"JSON"))
+        archivo.write(json_chunk)
+        archivo.write(struct.pack("<I4s", len(binario_chunk), b"BIN\x00"))
+        archivo.write(binario_chunk)
+
+
+def ejecutar():
+    asegurar_directorios()
+
+    documento = App.newDocument("BancaPET_Prueba001")
+    cubo = documento.addObject("Part::Box", "Cubo_100mm")
+    cubo.Label = "Cubo PET 100 mm"
+    cubo.Length = TAMANO_MM
+    cubo.Width = TAMANO_MM
+    cubo.Height = TAMANO_MM
+    mitad = TAMANO_MM / 2.0
+    cubo.Placement.Base = App.Vector(-mitad, -mitad, -mitad)
+    cubo.setExpression("Placement.Base.x", "-Length / 2")
+    cubo.setExpression("Placement.Base.y", "-Width / 2")
+    cubo.setExpression("Placement.Base.z", "-Height / 2")
+    documento.recompute()
+
+    validar_cubo(cubo, TAMANO_MM)
+
+    ruta_fcstd = os.path.join(RUTA_CAD, "cubo.FCStd")
+    ruta_step = os.path.join(RUTA_CAD, "cubo.step")
+    ruta_glb = os.path.join(RUTA_MODELOS, "cubo.glb")
+    ruta_glb_web = os.path.join(RUTA_WEB_MODELOS, "cubo.glb")
+
+    documento.saveAs(ruta_fcstd)
+    # Part.export conserva en STEP la colocación global del objeto.
+    Part.export([cubo], ruta_step)
+    exportar_glb(cubo.Shape, ruta_glb)
+    shutil.copyfile(ruta_glb, ruta_glb_web)
+
+    for ruta in (ruta_fcstd, ruta_step, ruta_glb, ruta_glb_web):
+        if not os.path.isfile(ruta) or os.path.getsize(ruta) == 0:
+            raise RuntimeError("No se generó el archivo esperado: " + ruta)
+
+    print("Cubo creado: 100 x 100 x 100 mm, centrado en el origen.")
+    print("FCStd: " + ruta_fcstd)
+    print("STEP: " + ruta_step)
+    print("GLB: " + ruta_glb)
+    print("Copia web: " + ruta_glb_web)
+
+
+def cerrar_documento_prueba():
+    if "BancaPET_Prueba001" in App.listDocuments():
+        App.closeDocument("BancaPET_Prueba001")
+
+
+try:
+    ejecutar()
+except Exception:
+    traceback.print_exc()
+    cerrar_documento_prueba()
+    raise
+else:
+    cerrar_documento_prueba()
