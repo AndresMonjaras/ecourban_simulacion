@@ -1,12 +1,11 @@
-node_modules/
-dist/
-.cache/
+**/node_modules/
+**/dist/
+**/.cache/
 .vite/
 .agy-staff/
 __pycache__/
 *.pyc
 *.FCBak
-Temporales/
 .playwright-mcp/
 page-*.yml
 console-*.log

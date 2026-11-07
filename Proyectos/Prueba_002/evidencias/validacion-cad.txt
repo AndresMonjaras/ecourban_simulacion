@@ -1,9 +1,0 @@
-VALIDACIÓN CAD: OK
-Piezas paramétricas Part::Box: 13
-Prueba Length y regeneración: OK
-Bounding box: 1500.00 x 624.79 x 850.00 mm
-Sólidos STEP: 13
-IDs JSON: coinciden
-GLB 2.0: cabecera y tamaño correctos
-UNIÓN INTENCIONAL 38540.74 mm3: soporte_izquierdo / costilla_izquierdo
-UNIÓN INTENCIONAL 38540.74 mm3: soporte_derecho / costilla_derecho

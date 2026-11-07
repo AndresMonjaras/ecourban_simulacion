@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "units": {
+    "position": "m",
+    "rotation": "rad",
+    "mass": "kg",
+    "dimensions": "mm"
+  },
+  "objects": [
+    {
+      "id": "17490349-5ebd-42c6-8273-8e3f5a276047",
+      "name": "Banca PET 01",
+      "type": "bench",
+      "modelId": "banca-p002",
+      "transform": {
+        "position": [
+          -0.4465242712639066,
+          1.0279851620134384,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "dimensionsMm": [
+        1500,
+        624.79,
+        850
+      ],
+      "properties": {},
+      "visible": true,
+      "metadata": {
+        "visualOnly": true,
+        "cadModelId": "banca-p002",
+        "materialId": null,
+        "componentIds": [
+          "asiento_01",
+          "asiento_02",
+          "asiento_03",
+          "soporte_01",
+          "soporte_02"
+        ],
+        "surfaceIds": [],
+        "contacts": [],
+        "loads": []
+      }
+    },
+    {
+      "id": "f4dbdf17-33d7-4090-9491-940ea7b31b74",
+      "name": "Bloque de 20 kg 01",
+      "type": "weight",
+      "modelId": "bloque-200mm",
+      "transform": {
+        "position": [
+          -0.4743725747468983,
+          1.0855361338347436,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "dimensionsMm": [
+        200,
+        200,
+        200
+      ],
+      "properties": {
+        "massKg": 20
+      },
+      "visible": true,
+      "metadata": {
+        "visualOnly": true,
+        "cadModelId": null,
+        "materialId": null,
+        "componentIds": [],
+        "surfaceIds": [],
+        "contacts": [],
+        "loads": []
+      }
+    },
+    {
+      "id": "c62808eb-0b1d-4f3d-9a77-0aec8c63f55a",
+      "name": "Bloque de 20 kg 02",
+      "type": "weight",
+      "modelId": "bloque-200mm",
+      "transform": {
+        "position": [
+          -1.203967187417259,
+          -13.810578157234925,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "dimensionsMm": [
+        200,
+        200,
+        200
+      ],
+      "properties": {
+        "massKg": 20
+      },
+      "visible": true,
+      "metadata": {
+        "visualOnly": true,
+        "cadModelId": null,
+        "materialId": null,
+        "componentIds": [],
+        "surfaceIds": [],
+        "contacts": [],
+        "loads": []
+      }
+    },
+    {
+      "id": "cf8f3010-2c2c-46f5-aa92-04f07901f057",
+      "name": "Bloque de 20 kg 03",
+      "type": "weight",
+      "modelId": "bloque-200mm",
+      "transform": {
+        "position": [
+          -0.48979786069561215,
+          1.2919386519019356,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "dimensionsMm": [
+        200,
+        200,
+        200
+      ],
+      "properties": {
+        "massKg": 20
+      },
+      "visible": true,
+      "metadata": {
+        "visualOnly": true,
+        "cadModelId": null,
+        "materialId": null,
+        "componentIds": [],
+        "surfaceIds": [],
+        "contacts": [],
+        "loads": []
+      }
+    }
+  ]
+}
