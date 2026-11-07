@@ -91,12 +91,22 @@ export default function HumanModel({ pose, proportions, motion, sitPose, sitLift
     });
     return found;
   }, [model]);
-  const rest = useMemo(() => new Map([...bones].map(([name, bone]) => [name, bone.quaternion.clone()])), [bones]);
+  const rest = useMemo(() => new Map([...bones].map(([name, bone]) => [name, { rotation: bone.quaternion.clone(), position: bone.position.clone() }])), [bones]);
+  const skinnedMeshes = useMemo(() => {
+    const meshes: THREE.SkinnedMesh[] = [];
+    model.traverse((object) => {
+      if ((object as THREE.SkinnedMesh).isSkinnedMesh) meshes.push(object as THREE.SkinnedMesh);
+    });
+    return meshes;
+  }, [model]);
   const applyPose = useCallback((activePose: PoseHumana, lift = 0) => {
     const space = poseSpace.current;
     if (!space) return;
     space.position.set(0, 0, activePose.pelvis.center[2] - HEIGHT_HIPS_MODEL * proportions[2] + lift);
-    for (const [name, quaternion] of rest) bones.get(name)?.quaternion.copy(quaternion);
+    for (const [name, transform] of rest) {
+      const joint = bones.get(name);
+      if (joint) { joint.quaternion.copy(transform.rotation); joint.position.copy(transform.position); }
+    }
     scene.updateMatrixWorld(true);
     const poseOriginZ = space.position.z - lift;
     const target = (point: Vector3) => space.localToWorld(vector([point[0], point[1], point[2] - poseOriginZ]));
@@ -127,9 +137,31 @@ export default function HumanModel({ pose, proportions, motion, sitPose, sitLift
       aimBone(bone(`${side}UpLeg`), bone(`${side}Leg`), hip, knee, scene);
       aimBone(bone(`${side}Leg`), bone(`${side}Foot`), knee, ankle, scene);
     }
-  }, [bones, proportions, rest, scene]);
+    // Test the actual deformed mesh, including mixed ankle/shin weights.
+    // Move the root rather than an individual foot bone: this preserves the
+    // ankle connection and the original segment lengths in every pose.
+    scene.updateMatrixWorld(true);
+    const vertex = new THREE.Vector3();
+    let bottom = Infinity;
+    for (const mesh of skinnedMeshes) {
+      mesh.skeleton.update();
+      const positions = mesh.geometry.getAttribute("position");
+      for (let index = 0; index < positions.count; index++) {
+        mesh.getVertexPosition(index, vertex).applyMatrix4(mesh.matrixWorld);
+        bottom = Math.min(bottom, vertex.z);
+      }
+    }
+    if (bottom < 0.003 && space.parent) {
+      const world = space.getWorldPosition(new THREE.Vector3());
+      world.z += 0.003 - bottom;
+      space.position.copy(space.parent.worldToLocal(world));
+      scene.updateMatrixWorld(true);
+    }
+  }, [bones, proportions, rest, scene, skinnedMeshes]);
 
-  useLayoutEffect(() => { if (!motion) applyPose(pose); }, [applyPose, motion, pose]);
+  useLayoutEffect(() => {
+    if (!motion) applyPose(pose);
+  }, [applyPose, motion, pose]);
   useFrame(() => {
     if (!motion || !sitPose) return;
     const elapsed = (performance.now() - motion.startedAt) / 1000;

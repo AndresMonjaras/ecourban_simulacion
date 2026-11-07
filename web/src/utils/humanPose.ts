@@ -79,8 +79,8 @@ function crearPosePersona(
   const longitudMuslo = (sentada ? Math.min(0.42, Math.max(0.25, profundidadAsientoM * 0.94)) : 0.43) * sz;
   const hip = radianes(postura.hipFlexionDeg);
   const knee = radianes(postura.kneeFlexionDeg);
-  // Raise the seated thigh line slightly above the plank to keep the skinned
-  // avatar's leg volume from clipping through the bench surface.
+  // Keep thigh volume above the seat; the renderer handles shoe/floor contact
+  // using the actual skinned mesh, independently of these ideal joint targets.
   const alturaCadera = sentada ? 0.12 : 0.90;
   const kneeZ = alturaCadera - (longitudMuslo / sz) * Math.cos(hip);
   const ankleTargetZ = sentada ? -alturaAsientoM + 0.075 : 0.075;
@@ -111,15 +111,15 @@ function crearPosePersona(
     pies.push({ center: escalar([x, tobillo[1] + 0.065, tobillo[2] - 0.032]), size: escalar([0.105, 0.20, 0.065]) });
 
     const hombro: Vector3 = [lado * 0.19, torsoFin[1], torsoFin[2] - 0.045];
-    const codoPunto: Vector3 = [lado * 0.22, hombro[1] + Math.sin(flexionHombro) * 0.29, hombro[2] - Math.cos(flexionHombro) * 0.29];
+    const codoPunto: Vector3 = [lado * 0.27, hombro[1] + Math.sin(flexionHombro) * 0.29, hombro[2] - Math.cos(flexionHombro) * 0.29];
     const anguloAntebrazo = flexionHombro + codo;
-    const muneca: Vector3 = [lado * 0.19, codoPunto[1] + Math.sin(anguloAntebrazo) * 0.30, codoPunto[2] - Math.cos(anguloAntebrazo) * 0.30];
+    const muneca: Vector3 = [lado * 0.30, codoPunto[1] + Math.sin(anguloAntebrazo) * 0.30, codoPunto[2] - Math.cos(anguloAntebrazo) * 0.30];
     joints.shoulders.push(escalar(hombro));
     joints.elbows.push(escalar(codoPunto));
     joints.wrists.push(escalar(muneca));
     brazos.push(segmento(hombro, codoPunto, 0.047, "#d4d9dd"));
     antebrazos.push(segmento(codoPunto, muneca, 0.039, "#d4d9dd"));
-    manos.push({ center: escalar([lado * 0.19, muneca[1] + 0.035, muneca[2] - 0.008]), size: escalar([0.075, 0.11, 0.045]) });
+    manos.push({ center: escalar([lado * 0.32, muneca[1] + 0.035, muneca[2] - 0.008]), size: escalar([0.075, 0.11, 0.045]) });
   }
 
   return {
