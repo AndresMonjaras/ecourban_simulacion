@@ -37,3 +37,16 @@ npm run build
 ### Persona articulada
 
 La organización, los controles y el recorrido de la persona están documentados en [Animación de la persona](docs/animacion-persona.md).
+
+
+### Banca PET
+
+La geometría, los acabados y su organización se describen en [Materiales de la banca](docs/materiales-banca.md).
+
+Para regenerar el GLB y su versión de caché, desde `web/`:
+
+```bash
+npm run model:bench
+```
+
+Los archivos resultantes se incluyen en el commit; la aplicación no necesita generar el modelo al arrancar.

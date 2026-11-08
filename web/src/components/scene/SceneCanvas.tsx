@@ -2,7 +2,7 @@ import type { WalkCommand } from "../../types/humanMotion.ts";
 import { Suspense, useCallback, useEffect, useMemo, useRef } from "react";
 import type { MutableRefObject, RefObject } from "react";
 import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { OrbitControls, TransformControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, TransformControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { SceneObject, SceneState, Vector3 } from "../../types/scene.ts";
@@ -12,6 +12,7 @@ import { getBenchDependents } from "../../utils/placement.ts";
 import { calculateCameraFrame, type CameraFrame } from "../../utils/cameraFraming.ts";
 import { findSceneObjectRoot } from "../../utils/sceneObjectFocus.ts";
 import HumanModel from "./HumanModel.tsx";
+import BenchModel from "./bench/BenchModel.tsx";
 
 type Props = {
   state: SceneState;
@@ -31,12 +32,6 @@ type Props = {
 };
 
 
-
-function ModeloBanca({ object }: { object: SceneObject }) {
-  const gltf = useGLTF("/models/banca.glb");
-  const model = useMemo(() => gltf.scene.clone(true), [gltf.scene]);
-  return <primitive object={model} />;
-}
 
 function asientoParaPersona(persona: SceneObject, objects: SceneObject[]): Asiento {
   const banca = objects.find((item) => {
@@ -159,7 +154,7 @@ function Objeto({ object, selected, blocked, mode, placementType, seat, walkComm
   });
   const modelLift = command ? (command.seat[2] - command.route[0][2]) / object.transform.scale[2] : 0;
   const contenidoPersonaArticulada = pose && <HumanModel pose={pose} proportions={factorPersona} motion={command} sitPose={poseSentada} sitLift={modelLift} />;
-  const contenido = isBench ? <ModeloBanca object={object} /> : object.type === "weight" ?
+  const contenido = isBench ? <BenchModel /> : object.type === "weight" ?
     <mesh position={[0, 0, 0.1]} castShadow receiveShadow><boxGeometry args={[0.2, 0.2, 0.2]} /><meshStandardMaterial color={color} /></mesh> : contenidoPersonaArticulada;
 
   const contenidoEscuchado = <group ref={group} userData={{ sceneObjectId: object.id }} position={position} rotation={rotation} scale={object.type === "person" ? object.transform.scale : escalaVisual}
@@ -374,7 +369,8 @@ function Escena({ state, cameraView, onSelect, onPlace, onPreview, onTransform, 
 
   return <>
     <color attach="background" args={["#111922"]} />
-    <ambientLight intensity={1.5} /><directionalLight position={[4, -5, 8]} intensity={2.4} castShadow />
+    <ambientLight intensity={1.5} /><directionalLight position={[4, -5, 8]} intensity={2.4} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-10} shadow-camera-right={10} shadow-camera-top={10} shadow-camera-bottom={-10} shadow-normalBias={0.02} />
+    <mesh position={[0, 0, -0.004]} receiveShadow raycast={() => {}}><planeGeometry args={[200, 200]} /><shadowMaterial transparent opacity={0.25} depthWrite={false} /></mesh>
     <gridHelper args={[20, 40, "#688394", "#354956"]} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.002]} />
     <mesh ref={plano} rotation={[0, 0, 0]} position={[0, 0, -0.006]} onPointerMove={move} onClick={place} onContextMenu={(event) => event.nativeEvent.preventDefault()}>
       <planeGeometry args={[200, 200]} /><meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
@@ -394,9 +390,7 @@ function Escena({ state, cameraView, onSelect, onPlace, onPreview, onTransform, 
 }
 
 export default function SceneCanvas(props: Props) {
-  return <Canvas camera={{ position: [2.5, 3.8, 4.8], fov: 44, up: [0, 0, 1] }}>
+  return <Canvas shadows camera={{ position: [2.5, 3.8, 4.8], fov: 44, up: [0, 0, 1] }}>
     <Suspense fallback={null}><Escena {...props} /></Suspense>
   </Canvas>;
 }
-
-useGLTF.preload("/models/banca.glb");
