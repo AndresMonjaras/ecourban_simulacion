@@ -7,7 +7,7 @@ export function crearIdEscena(): string {
 
 export function crearObjetoEscena(tipo: TipoObjeto, id: string, ordinal: number, posicion: Vector3 = [0, 0, 0], componentes: string[] = []): SceneObject {
   const dimensiones: Record<TipoObjeto, Vector3> = {
-    bench: [1500, 624.79, 850], person: [450, 350, 1750], weight: [200, 200, 200],
+    bench: [1520, 598, 819], person: [450, 350, 1750], weight: [200, 200, 200],
   };
   const nombres: Record<TipoObjeto, string> = {
     bench: `Banca PET ${String(ordinal).padStart(2, "0")}`,
@@ -22,7 +22,7 @@ export function crearObjetoEscena(tipo: TipoObjeto, id: string, ordinal: number,
     dimensionsMm: dimensiones[tipo],
     properties: tipo === "person" ? { massKg: 75, posture: { ...POSTURA_PERSONA_PARADA_DEFAULT } } : tipo === "weight" ? { massKg: 20 } : {},
     visible: true,
-    metadata: { visualOnly: true, cadModelId: tipo === "bench" ? "banca-p002" : null, materialId: null,
+    metadata: { visualOnly: true, cadModelId: null, materialId: null,
       componentIds: [...componentes], surfaceIds: [], contacts: [], loads: [] },
   };
 }

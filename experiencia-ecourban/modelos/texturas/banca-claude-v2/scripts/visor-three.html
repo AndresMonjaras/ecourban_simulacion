@@ -1,0 +1,23 @@
+<!doctype html><html><body style="margin:0;background:#2a2d31"><canvas id="c"></canvas><pre id="rep" style="display:none"></pre>
+<script type="importmap">{"imports":{"three":"./three/build/three.module.js","three/addons/":"./three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+const q=new URLSearchParams(location.search); const W=+(q.get('w')||1000),H=+(q.get('h')||700);
+const canvas=document.getElementById('c'); const r=new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true}); r.setSize(W,H,false); r.setPixelRatio(1);
+canvas.style.width=W+'px';canvas.style.height=H+'px';
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x3a3d42);
+const pm=new THREE.PMREMGenerator(r); const mode=q.get('mode')||'studio';
+scene.environment=pm.fromScene(new RoomEnvironment(),0.04).texture; scene.environmentIntensity=mode==='rake'?0.15:0.7;
+const v=(s)=>new THREE.Vector3(...s.split(',').map(Number));
+if(mode==='rake'){const d=new THREE.DirectionalLight(0xffffff,4); d.position.copy(v(q.get('light')||'-4,0.7,1.5')); scene.add(d);} else {const d=new THREE.DirectionalLight(0xffffff,1.6); d.position.set(2,4,5); scene.add(d);}
+const cam=new THREE.PerspectiveCamera(+(q.get('fov')||35),W/H,0.01,50); cam.position.copy(v(q.get('cam'))); cam.lookAt(v(q.get('target')));
+new GLTFLoader().load(q.get('glb'),(g)=>{
+ scene.add(g.scene); const rep={nodes:0,meshes:0,names:[],mats:{},prims:{withUV:0,withTangent:0,total:0,normalMapPrimsMissingTangent:0}};
+ g.scene.traverse(o=>{ rep.nodes++; if(o.isMesh){rep.meshes++; rep.names.push(o.name); const m=o.material; const a=o.geometry.attributes; rep.prims.total++; if(a.uv)rep.prims.withUV++; if(a.tangent)rep.prims.withTangent++; if(m.normalMap&&!a.tangent)rep.prims.normalMapPrimsMissingTangent++;
+  if(!rep.mats[m.name]){const im=(t)=>t?{w:t.image.width,h:t.image.height,cs:t.colorSpace}:null; rep.mats[m.name]={map:im(m.map),normalMap:im(m.normalMap),metalnessMap:im(m.metalnessMap),roughnessMap:im(m.roughnessMap),metalness:m.metalness,roughness:m.roughness,color:m.color.getHexString(),sameMR:m.metalnessMap===m.roughnessMap};}}});
+ rep.nodes=rep.nodes-1; document.getElementById('rep').textContent=JSON.stringify(rep);
+ r.render(scene,cam); document.title='READY';
+},undefined,e=>{document.getElementById('rep').textContent='ERR '+e; document.title='ERR';});
+</script></body></html>

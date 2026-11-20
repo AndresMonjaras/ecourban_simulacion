@@ -33,3 +33,32 @@ La colocación sobre la banca se comprueba con intersecciones del modelo bajo el
 npm test
 npm run build
 ```
+
+### Persona articulada
+
+La organización, los controles y el recorrido de la persona están documentados en [Animación de la persona](docs/animacion-persona.md).
+
+
+### Banca PET
+
+La geometría, los acabados y su organización se describen en [Materiales de la banca](docs/materiales-banca.md).
+
+Para regenerar el GLB y su versión de caché, desde `web/`:
+
+```bash
+npm run model:bench
+```
+
+Los archivos resultantes se incluyen en el commit; la aplicación no necesita generar el modelo al arrancar.
+
+### Experiencia interactiva EcoUrban
+
+La landing 3D con recorrido de banca por scroll es una aplicación independiente en `experiencia-ecourban/`:
+
+```bash
+cd experiencia-ecourban
+npm ci
+npm run dev
+```
+
+Vite usa el puerto `5177`. La experiencia de scroll y el simulador BancaPET comparten el modelo GLB de la banca texturizada, pero mantienen aplicaciones y estados separados.
