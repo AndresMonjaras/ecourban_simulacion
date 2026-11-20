@@ -45,7 +45,7 @@ test("actualiza propiedades editables sin cambiar el ID ni otros objetos", () =>
 });
 
 test("quitar la banca mantiene sus objetos apoyados y desciende los soportados al piso", () => {
-  const bench = { ...crearPeso("banca"), type: "bench" as const, dimensionsMm: [1500, 624.79, 850] as [number, number, number] };
+  const bench = { ...crearPeso("banca"), type: "bench" as const, dimensionsMm: [1500, 660, 796] as [number, number, number] };
   const weight = { ...crearPeso("peso-sobre-banca"), transform: { position: [0, 0, 0.45] as [number, number, number], rotation: [0, 0, 0] as [number, number, number], scale: [1, 1, 1] as [number, number, number] } };
   const uno = sceneReducer(createInitialSceneState(), { type: "add", object: bench });
   const dos = sceneReducer(uno, { type: "add", object: weight });

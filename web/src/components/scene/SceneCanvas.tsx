@@ -1,7 +1,8 @@
+import type { WalkCommand } from "../../types/humanMotion.ts";
 import { Suspense, useCallback, useEffect, useMemo, useRef } from "react";
 import type { MutableRefObject, RefObject } from "react";
 import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { OrbitControls, TransformControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, TransformControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { SceneObject, SceneState, Vector3 } from "../../types/scene.ts";
@@ -10,6 +11,8 @@ import { POSTURA_PERSONA_DEFAULT, POSTURA_PERSONA_PARADA_DEFAULT, pararPersona, 
 import { getBenchDependents } from "../../utils/placement.ts";
 import { calculateCameraFrame, type CameraFrame } from "../../utils/cameraFraming.ts";
 import { findSceneObjectRoot } from "../../utils/sceneObjectFocus.ts";
+import HumanModel from "./HumanModel.tsx";
+import BenchModel from "./bench/BenchModel.tsx";
 
 type Props = {
   state: SceneState;
@@ -24,37 +27,16 @@ type Props = {
   onCancelHold: () => void;
   onContext: (id: string, x: number, y: number) => void;
   focusRequest: { kind: "bench" | "object"; objectId?: string; nonce: number } | null;
+  walkCommand: WalkCommand | null;
+  onWalkComplete: (command: WalkCommand) => void;
 };
 
-function ModeloBanca({ object }: { object: SceneObject }) {
-  const gltf = useGLTF("/models/banca.glb");
-  const model = useMemo(() => gltf.scene.clone(true), [gltf.scene]);
-  return <primitive object={model} />;
-}
 
-function puntoEntre(a: Vector3, b: Vector3): Vector3 {
-  return [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-}
-
-function SegmentoLocal({ end, radius, color }: { end: Vector3; radius: number; color: string }) {
-  const direccion = new THREE.Vector3(...end);
-  const longitud = direccion.length();
-  if (longitud < 0.001) return null;
-  const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), direccion.clone().normalize());
-  return <mesh position={[end[0] / 2, end[1] / 2, end[2] / 2]} quaternion={quaternion} castShadow receiveShadow>
-    <capsuleGeometry args={[radius, Math.max(0.001, longitud - radius * 2), 6, 12]} />
-    <meshStandardMaterial color={color} />
-  </mesh>;
-}
-
-function BolaArticulacion({ radius, color }: { radius: number; color: string }) {
-  return <mesh castShadow receiveShadow><sphereGeometry args={[radius, 16, 12]} /><meshStandardMaterial color={color} /></mesh>;
-}
 
 function asientoParaPersona(persona: SceneObject, objects: SceneObject[]): Asiento {
   const banca = objects.find((item) => {
     if (!item.visible || item.type !== "bench") return false;
-    const escala: Vector3 = item.transform.scale.map((factor, index) => factor * item.dimensionsMm[index] / [1500, 624.79, 850][index]) as Vector3;
+    const escala: Vector3 = item.transform.scale.map((factor, index) => factor * item.dimensionsMm[index] / [1520, 598, 819][index]) as Vector3;
     const alturaAsiento = item.transform.position[2] + 0.45 * escala[2];
     if (Math.abs(persona.transform.position[2] - alturaAsiento) > 0.08) return false;
     const dx = persona.transform.position[0] - item.transform.position[0];
@@ -62,11 +44,11 @@ function asientoParaPersona(persona: SceneObject, objects: SceneObject[]): Asien
     const yaw = item.transform.rotation[2];
     const xLocal = Math.cos(yaw) * dx + Math.sin(yaw) * dy;
     const yLocal = -Math.sin(yaw) * dx + Math.cos(yaw) * dy;
-    return Math.abs(xLocal) <= 0.75 * escala[0] && Math.abs(yLocal) <= 0.225 * escala[1];
+    return Math.abs(xLocal) <= 0.76 * escala[0] && Math.abs(yLocal) <= 0.30 * escala[1];
   });
   if (!banca) return null;
-  const escalaProfundidad = banca.transform.scale[1] * banca.dimensionsMm[1] / 624.79;
-  return { altura: persona.transform.position[2], profundidad: 0.45 * escalaProfundidad };
+  const escalaProfundidad = banca.transform.scale[1] * banca.dimensionsMm[1] / 598;
+  return { altura: persona.transform.position[2], profundidad: 0.46 * escalaProfundidad };
 }
 
 type HeldObject = { id: string; position: Vector3; rotation: Vector3; fallbackPosition: Vector3; lastX: number; lastY: number };
@@ -77,8 +59,10 @@ type HandlersObjeto = Pick<Props, "onSelect" | "onTransform" | "onTransformStart
   onObjectReady: (id: string, type: SceneObject["type"], object: THREE.Object3D) => void;
 };
 
-function Objeto({ object, selected, blocked, mode, placementType, seat, handlers }: { object: SceneObject; selected: boolean; blocked: boolean; mode: "translate" | "rotate"; placementType: SceneState["placementType"]; seat: Asiento; handlers: HandlersObjeto }) {
+function Objeto({ object, selected, blocked, mode, placementType, seat, walkCommand, onWalkComplete, handlers }: { object: SceneObject; selected: boolean; blocked: boolean; mode: "translate" | "rotate"; placementType: SceneState["placementType"]; seat: Asiento; walkCommand: WalkCommand | null; onWalkComplete: (command: WalkCommand) => void; handlers: HandlersObjeto }) {
   const group = useRef<THREE.Group>(null);
+  const completedWalk = useRef<string | null>(null);
+  const wasWalking = useRef(false);
   useEffect(() => {
     if (group.current) handlers.onObjectReady(object.id, object.type, group.current);
   }, [object.id, handlers.onObjectReady]);
@@ -87,7 +71,7 @@ function Objeto({ object, selected, blocked, mode, placementType, seat, handlers
   const isBench = object.type === "bench";
   const color = object.type === "person" ? "#d8a476" : "#e0a53a";
   const sentado = object.type === "person" && object.transform.position[2] > 0.3;
-  const medidasBase = { bench: [1500, 624.79, 850], person: [450, 350, 1750], weight: [200, 200, 200] } as const;
+  const medidasBase = { bench: [1520, 598, 819], person: [450, 350, 1750], weight: [200, 200, 200] } as const;
   const escalaVisual = object.transform.scale.map((factor, index) => factor * object.dimensionsMm[index] / medidasBase[object.type][index]) as Vector3;
   const factorPersona: Vector3 = [object.dimensionsMm[0] / 450, object.dimensionsMm[1] / 350, object.dimensionsMm[2] / 1750];
   const escalaPersona: Vector3 = [object.transform.scale[0] * factorPersona[0], object.transform.scale[1] * factorPersona[1], object.transform.scale[2] * factorPersona[2]];
@@ -97,65 +81,85 @@ function Objeto({ object, selected, blocked, mode, placementType, seat, handlers
     object.dimensionsMm,
     object.properties.posture ?? POSTURA_PERSONA_DEFAULT,
   ) : pararPersona(object.dimensionsMm, object.properties.posture ?? POSTURA_PERSONA_PARADA_DEFAULT) : null;
-  const radioArticulacion = Math.min(...factorPersona);
-  const contenidoPersonaArticulada = pose && <>
-    <group position={pose.pelvis.center}>
-      <mesh scale={[pose.pelvis.size[0] / 2, pose.pelvis.size[1] / 2, pose.pelvis.size[2] / 2]} castShadow receiveShadow><sphereGeometry args={[1, 24, 18]} /><meshStandardMaterial color="#45647b" /></mesh>
-      {pose.joints.hips.map((hip, index) => {
-        const rodilla = pose.joints.knees[index];
-        const tobillo = pose.joints.ankles[index];
-        const vectorCadera = puntoEntre(pose.pelvis.center, hip);
-        const vectorRodilla = puntoEntre(hip, rodilla);
-        const vectorTobillo = puntoEntre(rodilla, tobillo);
-        const pie = pose.pies[index];
-        return <group key={`pierna-${index}`} position={vectorCadera}>
-          <SegmentoLocal end={vectorRodilla} radius={0.064 * radioArticulacion} color="#45647b" />
-          <BolaArticulacion radius={0.072 * radioArticulacion} color="#344e61" />
-          <group position={vectorRodilla}>
-            <BolaArticulacion radius={0.061 * radioArticulacion} color="#344e61" />
-            <SegmentoLocal end={vectorTobillo} radius={0.047 * radioArticulacion} color="#45647b" />
-            <group position={vectorTobillo}>
-              <BolaArticulacion radius={0.043 * radioArticulacion} color="#bcc5ca" />
-              <mesh position={puntoEntre(tobillo, pie.center)}><boxGeometry args={pie.size} /><meshStandardMaterial color="#303b43" /></mesh>
-            </group>
-          </group>
-        </group>;
-      })}
-    </group>
-    <group position={pose.torso.start}>
-      <SegmentoLocal end={puntoEntre(pose.torso.start, pose.torso.end)} radius={pose.torso.radius} color={pose.torso.color} />
-      <group position={puntoEntre(pose.torso.start, pose.torso.end)}>
-        <SegmentoLocal end={puntoEntre(pose.cuello.start, pose.cuello.end)} radius={pose.cuello.radius} color={pose.cuello.color} />
-        <mesh position={puntoEntre(pose.torso.end, pose.cabeza.center)} scale={[pose.cabeza.size[0] / 2, pose.cabeza.size[1] / 2, pose.cabeza.size[2] / 2]} castShadow receiveShadow><sphereGeometry args={[1, 24, 18]} /><meshStandardMaterial color="#d4d9dd" /></mesh>
-        {pose.joints.shoulders.map((shoulder, index) => {
-          const elbow = pose.joints.elbows[index];
-          const wrist = pose.joints.wrists[index];
-          const hand = pose.manos[index];
-          const vectorShoulder = puntoEntre(pose.torso.end, shoulder);
-          const vectorElbow = puntoEntre(shoulder, elbow);
-          const vectorWrist = puntoEntre(elbow, wrist);
-          return <group key={`brazo-${index}`} position={vectorShoulder}>
-            <BolaArticulacion radius={0.053 * radioArticulacion} color="#bcc5ca" />
-            <SegmentoLocal end={vectorElbow} radius={0.047 * radioArticulacion} color="#d4d9dd" />
-            <group position={vectorElbow}>
-              <BolaArticulacion radius={0.043 * radioArticulacion} color="#bcc5ca" />
-              <SegmentoLocal end={vectorWrist} radius={0.039 * radioArticulacion} color="#d4d9dd" />
-              <group position={vectorWrist}>
-                <BolaArticulacion radius={0.032 * radioArticulacion} color="#bcc5ca" />
-                <mesh position={puntoEntre(wrist, hand.center)} scale={[hand.size[0] / 2, hand.size[1] / 2, hand.size[2] / 2]}><sphereGeometry args={[1, 16, 12]} /><meshStandardMaterial color="#d4d9dd" /></mesh>
-              </group>
-            </group>
-          </group>;
-        })}
-      </group>
-    </group>
-  </>;
-  const contenido = isBench ? <ModeloBanca object={object} /> : object.type === "weight" ?
+  const command = walkCommand?.id === object.id ? walkCommand : null;
+  const poseSentada = command ? sentarPersona(
+    command.seat[2] / escalaPersona[2],
+    command.seatDepth / escalaPersona[1],
+    object.dimensionsMm,
+    POSTURA_PERSONA_DEFAULT,
+  ) : null;
+  useFrame((_, delta) => {
+    const actual = group.current;
+    if (!actual) return;
+    if (!command) {
+      if (wasWalking.current) {
+        actual.position.fromArray(position);
+        actual.rotation.set(...rotation);
+        wasWalking.current = false;
+      }
+      return;
+    }
+    wasWalking.current = true;
+    const elapsed = (performance.now() - command.startedAt) / 1000;
+    const ease = (value: number) => {
+      const t = THREE.MathUtils.clamp(value, 0, 1);
+      return t * t * (3 - 2 * t);
+    };
+    const lengths = command.route.slice(1).map((point, index) => {
+      const from = command.route[index];
+      return Math.hypot(point[0] - from[0], point[1] - from[1]);
+    });
+    const totalDistance = lengths.reduce((sum, value) => sum + value, 0);
+    if (elapsed < command.walkDuration) {
+      const progress = ease(elapsed / command.walkDuration);
+      let remaining = totalDistance * progress;
+      let position = command.route[0];
+      let heading = actual.rotation.z;
+      for (let index = 0; index < lengths.length; index += 1) {
+        const segmentLength = lengths[index];
+        const from = command.route[index];
+        const to = command.route[index + 1];
+        if (remaining <= segmentLength || index === lengths.length - 1) {
+          const ratio = segmentLength > 1e-6 ? THREE.MathUtils.clamp(remaining / segmentLength, 0, 1) : 1;
+          position = [THREE.MathUtils.lerp(from[0], to[0], ratio), THREE.MathUtils.lerp(from[1], to[1], ratio), from[2]];
+          heading = Math.atan2(-(to[0] - from[0]), to[1] - from[1]);
+          break;
+        }
+        remaining -= segmentLength;
+      }
+      const turn = THREE.MathUtils.euclideanModulo(heading - actual.rotation.z + Math.PI, Math.PI * 2) - Math.PI;
+      actual.position.set(position[0], position[1], command.route[0][2]);
+      actual.rotation.z += turn * (1 - Math.exp(-6 * delta));
+    } else if (elapsed < command.walkDuration + command.turnDuration) {
+      const approach = command.route[command.route.length - 1];
+      actual.position.set(approach[0], approach[1], command.route[0][2]);
+      const turn = THREE.MathUtils.euclideanModulo(command.seatYaw - actual.rotation.z + Math.PI, Math.PI * 2) - Math.PI;
+      actual.rotation.z += turn * (1 - Math.exp(-6 * delta));
+    } else {
+      const rawProgress = ease((elapsed - command.walkDuration - command.turnDuration) / command.sitDuration);
+      const progress = 1 - (1 - rawProgress) ** 2;
+      const approach = command.route[command.route.length - 1];
+      actual.position.set(
+        THREE.MathUtils.lerp(approach[0], command.seat[0], progress),
+        THREE.MathUtils.lerp(approach[1], command.seat[1], progress),
+        command.route[0][2],
+      );
+      const turn = THREE.MathUtils.euclideanModulo(command.seatYaw - actual.rotation.z + Math.PI, Math.PI * 2) - Math.PI;
+      actual.rotation.z += turn * (1 - Math.exp(-6 * delta));
+    }
+    if (elapsed >= command.walkDuration + command.turnDuration + command.sitDuration && completedWalk.current !== command.startedAt.toString()) {
+      completedWalk.current = command.startedAt.toString();
+      onWalkComplete(command);
+    }
+  });
+  const modelLift = command ? (command.seat[2] - command.route[0][2]) / object.transform.scale[2] : 0;
+  const contenidoPersonaArticulada = pose && <HumanModel pose={pose} proportions={factorPersona} motion={command} sitPose={poseSentada} sitLift={modelLift} />;
+  const contenido = isBench ? <BenchModel /> : object.type === "weight" ?
     <mesh position={[0, 0, 0.1]} castShadow receiveShadow><boxGeometry args={[0.2, 0.2, 0.2]} /><meshStandardMaterial color={color} /></mesh> : contenidoPersonaArticulada;
 
   const contenidoEscuchado = <group ref={group} userData={{ sceneObjectId: object.id }} position={position} rotation={rotation} scale={object.type === "person" ? object.transform.scale : escalaVisual}
     onPointerDown={(event) => {
-      if (placementType) return;
+      if (placementType || command) return;
       event.stopPropagation();
       if (!handlers.held.current) {
         handlers.onSelect(object.id);
@@ -163,14 +167,14 @@ function Objeto({ object, selected, blocked, mode, placementType, seat, handlers
         handlers.onPickUp(object, event.nativeEvent.clientX, event.nativeEvent.clientY);
       }
     }}
-    onClick={(event) => { event.stopPropagation(); if (placementType) handlers.onPlace([event.point.x, event.point.y, event.point.z]); }}
+    onClick={(event) => { event.stopPropagation(); if (command) return; if (placementType) handlers.onPlace([event.point.x, event.point.y, event.point.z]); }}
     onPointerMove={(event) => { if (placementType) handlers.onPreview([event.point.x, event.point.y, event.point.z]); }}
     onContextMenu={(event) => { event.stopPropagation(); event.nativeEvent.preventDefault(); handlers.onContext(object.id, event.nativeEvent.clientX, event.nativeEvent.clientY); }}>
     {contenido}
   </group>;
 
   if (!object.visible) return null;
-  if (!selected || blocked) return contenidoEscuchado;
+  if (!selected || blocked || command) return contenidoEscuchado;
   return <TransformControls object={group as unknown as RefObject<THREE.Object3D>} mode={mode} onMouseDown={() => handlers.onTransformStart(object.id)} onObjectChange={() => {
     const actual = group.current;
     if (actual) handlers.onTransform(object.id, actual.position.toArray() as Vector3, actual.rotation.toArray().slice(0, 3) as Vector3);
@@ -180,7 +184,7 @@ function Objeto({ object, selected, blocked, mode, placementType, seat, handlers
   }}>{contenidoEscuchado}</TransformControls>;
 }
 
-function Escena({ state, cameraView, onSelect, onPlace, onPreview, onTransform, onTransformStart, onRelease, onCancelHold, onContext, preview, focusRequest }: Props) {
+function Escena({ state, cameraView, onSelect, onPlace, onPreview, onTransform, onTransformStart, onRelease, onCancelHold, onContext, preview, focusRequest, walkCommand, onWalkComplete }: Props) {
   const { gl, camera, scene } = useThree();
   const plano = useRef<THREE.Mesh>(null);
   const orbit = useRef<OrbitControlsImpl | null>(null);
@@ -303,7 +307,7 @@ function Escena({ state, cameraView, onSelect, onPlace, onPreview, onTransform, 
     const entradaDeTexto = (target: EventTarget | null) => target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || (target instanceof HTMLElement && target.isContentEditable);
     const presionar = (event: KeyboardEvent) => {
       const tecla = event.key.toLowerCase();
-      if (!["w", "a", "s", "d"].includes(tecla) || entradaDeTexto(event.target)) return;
+      if (!["w", "a", "s", "d"].includes(tecla) || event.shiftKey || entradaDeTexto(event.target)) return;
       teclas.current.add(tecla);
       event.preventDefault();
     };
@@ -365,12 +369,13 @@ function Escena({ state, cameraView, onSelect, onPlace, onPreview, onTransform, 
 
   return <>
     <color attach="background" args={["#111922"]} />
-    <ambientLight intensity={1.5} /><directionalLight position={[4, -5, 8]} intensity={2.4} castShadow />
+    <ambientLight intensity={1.5} /><directionalLight position={[4, -5, 8]} intensity={2.4} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-10} shadow-camera-right={10} shadow-camera-top={10} shadow-camera-bottom={-10} shadow-normalBias={0.02} />
+    <mesh position={[0, 0, -0.004]} receiveShadow raycast={() => {}}><planeGeometry args={[200, 200]} /><shadowMaterial transparent opacity={0.25} depthWrite={false} /></mesh>
     <gridHelper args={[20, 40, "#688394", "#354956"]} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.002]} />
     <mesh ref={plano} rotation={[0, 0, 0]} position={[0, 0, -0.006]} onPointerMove={move} onClick={place} onContextMenu={(event) => event.nativeEvent.preventDefault()}>
       <planeGeometry args={[200, 200]} /><meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
     </mesh>
-      {state.objects.map((object) => <Objeto key={object.id} object={object} selected={state.selectedId === object.id} blocked={object.type === "bench" && getBenchDependents(object, state.objects).length > 0} mode={state.transformMode} placementType={state.placementType} seat={object.type === "person" ? asientoParaPersona(object, state.objects) : null}
+      {state.objects.map((object) => <Objeto key={object.id} object={object} selected={state.selectedId === object.id} blocked={object.type === "bench" && getBenchDependents(object, state.objects).length > 0} mode={state.transformMode} placementType={state.placementType} seat={object.type === "person" ? asientoParaPersona(object, state.objects) : null} walkCommand={walkCommand} onWalkComplete={onWalkComplete}
       handlers={{ onSelect, onTransform, onTransformStart, onRelease, held, onPickUp, onContext, onPlace, onPreview, onObjectReady }} />)}
     {state.placementType && preview && <mesh position={[
       preview?.[0] ?? plano.current?.position.x ?? 0,
@@ -385,9 +390,7 @@ function Escena({ state, cameraView, onSelect, onPlace, onPreview, onTransform, 
 }
 
 export default function SceneCanvas(props: Props) {
-  return <Canvas camera={{ position: [2.5, 3.8, 4.8], fov: 44, up: [0, 0, 1] }}>
+  return <Canvas shadows camera={{ position: [2.5, 3.8, 4.8], fov: 44, up: [0, 0, 1] }}>
     <Suspense fallback={null}><Escena {...props} /></Suspense>
   </Canvas>;
 }
-
-useGLTF.preload("/models/banca.glb");

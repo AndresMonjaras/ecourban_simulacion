@@ -8,7 +8,7 @@ const documento = (objects: unknown[], version = 1) => JSON.stringify({ version,
 const banca = {
   id: "banca-uno", name: "Banca PET 01", type: "bench", modelId: "banca-p002",
   transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
-  dimensionsMm: [1500, 624.79, 850], visible: true,
+  dimensionsMm: [1500, 660, 796], visible: true,
   properties: {}, metadata: { visualOnly: true, cadModelId: null, materialId: null, componentIds: [], surfaceIds: [], contacts: [], loads: [] },
 };
 
