@@ -157,7 +157,7 @@ La *Propuesta* y el *Proyecto terminado* enumeran normas y leyes mexicanas (entr
 
 ## 8. Contexto de este repositorio y guía visual para la web
 
-Este repositorio `ecourban_simulacion` contiene una herramienta de simulación/editor local de escenarios 3D BancaPET (Prueba 005), mientras EcoUrban es el proyecto empresarial descrito en las fuentes. Son piezas relacionadas para explicar y visualizar el concepto, pero el software/modelo 3D no demuestra que exista una banca fabricada ni que se hayan comprobado sus propiedades.
+Este repositorio contiene actualmente la experiencia interactiva principal de EcoUrban, con una banca 3D y una sección preliminar de proceso pendiente de adaptar a la guía técnica vigente. La herramienta de escenarios BancaPET (Prueba 005) se retiró de la aplicación activa; su historial permanece en Git. Ni el modelo 3D ni la experiencia visual demuestran que exista una banca fabricada o que sus propiedades hayan sido comprobadas.
 
 La labor del equipo web es dar visibilidad al proyecto con una experiencia interactiva, visual y explícita. Para el rol de diseño visual, la oportunidad principal es traducir la memoria y la cadena de valor a una narrativa clara: origen del pellet comprado, proceso tercerizado, ensamble, banca conceptual, variantes, escala y uso en un espacio urbano. El modelo 3D puede ayudar a entender dimensiones, ergonomía, color y contexto, y a comparar escenarios de instalación. Conviene:
 

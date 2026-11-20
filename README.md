@@ -1,59 +1,8 @@
-# ecourban_simulacion
+# EcoUrban — experiencia interactiva
 
-BancaPET · Prueba 005
+Aplicación React, TypeScript, Three.js, React Three Fiber y Anime.js para presentar la banca conceptual de EcoUrban y su proceso propuesto mediante una experiencia 3D guiada por scroll.
 
-Aplicación web completa de escenarios 3D. Incluye el editor de la Prueba 004 y añade navegación, apoyo de objetos y caída visual.
-
-## Ejecutar
-
-Desde este directorio:
-
-```bash
-cd web
-npm ci
-npm run dev -- --host 127.0.0.1
-```
-
-Abre <http://127.0.0.1:5176/> en Firefox.
-
-## Interacción
-
-- Mantén W/A/S/D para desplazar la vista suavemente por el plano horizontal. AW, AS y DW permiten movimiento diagonal; W+S o A+D cancela el movimiento.
-- Agrega un objeto desde Biblioteca y apunta a un espacio libre o a la superficie de la banca para ver su previsualización.
-- Haz clic y arrastra un objeto o usa el gizmo para moverlo. Al soltarlo, desciende hasta el apoyo permitido más alto.
-- La persona adopta una postura sentada cuando queda apoyada sobre la banca.
-- Las bancas solo se apoyan en el suelo. Los bloques pueden apoyarse en el asiento o en otros bloques.
-- La colocación rechaza penetraciones detectadas por las envolventes geométricas.
-
-La colocación sobre la banca se comprueba con intersecciones del modelo bajo el cursor y una región de asiento definida. El aterrizaje de objetos movidos usa alturas y envolventes simplificadas; no es una simulación dinámica ni un análisis FEM. No usar sus resultados como validación estructural.
-
-## Verificación
-
-```bash
-npm test
-npm run build
-```
-
-### Persona articulada
-
-La organización, los controles y el recorrido de la persona están documentados en [Animación de la persona](docs/animacion-persona.md).
-
-
-### Banca PET
-
-La geometría, los acabados y su organización se describen en [Materiales de la banca](docs/materiales-banca.md).
-
-Para regenerar el GLB y su versión de caché, desde `web/`:
-
-```bash
-npm run model:bench
-```
-
-Los archivos resultantes se incluyen en el commit; la aplicación no necesita generar el modelo al arrancar.
-
-### Experiencia interactiva EcoUrban
-
-La landing 3D con recorrido de banca por scroll es una aplicación independiente en `experiencia-ecourban/`:
+## Ejecutar en local
 
 ```bash
 cd experiencia-ecourban
@@ -61,4 +10,15 @@ npm ci
 npm run dev
 ```
 
-Vite usa el puerto `5177`. La experiencia de scroll y el simulador BancaPET comparten el modelo GLB de la banca texturizada, pero mantienen aplicaciones y estados separados.
+Vite inicia la aplicación en <http://localhost:5177/>.
+
+## Construir
+
+```bash
+cd experiencia-ecourban
+npm run build
+```
+
+La aplicación principal usa el modelo GLB v2 de la banca, sus texturas PBR y los archivos fuente Blender incluidos en `experiencia-ecourban/`. La sección de fabricación existente es preliminar y está pendiente de actualización para seguir la guía técnica de diez etapas; el proceso se presentará como propuesto, no como operación verificada ni resultado de ensayos.
+
+La planificación del flujo técnico está en [docs/guia-integracion-proceso-ecourban.md](docs/guia-integracion-proceso-ecourban.md). El simulador BancaPET ya no forma parte de la aplicación activa ni sus datos geométricos se consideran métricas de fabricación o validación estructural.
