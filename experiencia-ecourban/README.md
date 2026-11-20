@@ -1,6 +1,6 @@
 # Experiencia EcoUrban
 
-Aplicación independiente (React + TypeScript + Vite) para presentar la banca conceptual de EcoUrban en una escena 3D cinematográfica. El recorrido se controla con scroll nativo: la banca aparece ensamblada, gira, se separa por capítulos y cambia de cámara mientras se recorre el respaldo, el asiento y los soportes. No comparte código ni estado con el simulador BancaPET (`web/`); cada app distribuye su propia copia del mismo GLB v2.
+Aplicación principal (React + TypeScript + Vite) para presentar la banca conceptual de EcoUrban en una escena 3D cinematográfica. El recorrido se controla con scroll nativo: la banca aparece ensamblada, gira, se separa por capítulos y cambia de cámara mientras se recorre el respaldo, el asiento y los soportes. La secuencia continúa con una visualización del proceso técnico propuesto.
 
 ## Ejecutar
 
@@ -27,7 +27,7 @@ Dependencias principales: React, TypeScript, Three.js, React Three Fiber, Anime.
 - `src/escena/Banca.tsx` instancia `public/models/banca-claude-texturas-v2.glb`; `src/escena/bancaOficial.tsx` agrupa sus 73 nodos en nueve conjuntos animables sin perder sus transformaciones.
 - El GLB usa mapas PBR horneados para el rPET verde, grafito y acero. El informe de `modelos/texturas/banca-claude-v2/` documenta UVs, canales, tangentes, compresión y limitaciones.
 - `src/escena/Escena.tsx` contiene la cámara, iluminación de estudio, reflejos, sombras y encuadre adaptable.
-- Después del despiece de la banca, `SeccionFlujo` ilustra el proceso propuesto de materiales, maquila y ensamblaje. Estas estaciones son visualizaciones conceptuales, no maquinaria ni procesos verificados en una planta.
+- Después del despiece de la banca, `SeccionFlujo` contiene una visualización preliminar que todavía debe adaptarse al orden de diez etapas de la nueva guía técnica. Las estaciones actuales son conceptuales y no representan maquinaria ni procesos verificados en una planta. El plan de actualización está en [../docs/guia-integracion-proceso-ecourban.md](../docs/guia-integracion-proceso-ecourban.md).
 
 El modelo sigue siendo una **aproximación visual conceptual** basada en las referencias compartidas. No es un modelo CAD ni confirma el diseño de fabricación, el BOM, las uniones, dimensiones, carga o material específico de cada componente. La tornillería y los relieves son decisiones de visualización pendientes de validar con planos y datos del fabricante. Se conserva la etiqueta «Concepto».
 
@@ -39,4 +39,4 @@ Las fichas describen la propuesta documental y no validan especificaciones físi
 
 ## Validación registrada
 
-Los builds de ambas apps pasan con el modelo v2 activo. La integración se revisó en Chrome en escritorio y móvil emulado a 390 px; el GLB conserva sus 73 nodos y el despiece continúa funcionando. Las comparativas de materiales y geometría v1/v2 están en `capturas/banca-claude-texturas-v2/`. No se validó en dispositivos físicos ni GPU móvil. Vite informa que el chunk 3D supera 500 kB.
+El build de esta aplicación pasa con el modelo v2 activo. La integración se revisó en Chrome en escritorio y móvil emulado a 390 px; el GLB conserva sus 73 nodos y el despiece continúa funcionando. Las comparativas de materiales y geometría v1/v2 están en `capturas/banca-claude-texturas-v2/`. No se validó en dispositivos físicos ni GPU móvil. Vite informa que el chunk 3D supera 500 kB.

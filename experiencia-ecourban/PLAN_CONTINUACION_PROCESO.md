@@ -1,5 +1,7 @@
 # Plan: continuación por scroll del proceso propuesto EcoUrban
 
+> **Supersedido como fuente técnica:** este plan se redactó con la propuesta anterior de maquila externa y un flujo abreviado. Para actualizar la animación, seguir [../docs/guia-integracion-proceso-ecourban.md](../docs/guia-integracion-proceso-ecourban.md), que toma como autoridad la nueva guía técnica de diez etapas. Este archivo se conserva como registro de la planeación anterior; no usar sus seis hitos como especificación vigente.
+
 ## Objetivo
 
 Extender el recorrido que termina con la banca ensamblada para que el siguiente scroll explique visualmente, con una escena cinematográfica y capítulos sincronizados, el flujo de fabricación y armado descrito en los documentos del proyecto. La sección nueva se ejecutará solo en localhost durante esta etapa.
