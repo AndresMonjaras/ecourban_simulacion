@@ -14,6 +14,9 @@ export default function App() {
 
   return (
     <>
+      <div className="ambiente-global" aria-hidden="true">
+        <div className="taller-fondo" />
+      </div>
       <header className="marca">
         <span>EcoUrban</span>
       </header>

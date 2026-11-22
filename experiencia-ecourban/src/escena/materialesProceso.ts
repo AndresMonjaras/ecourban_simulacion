@@ -86,6 +86,8 @@ export const MATERIAL = {
   cinta: new MeshStandardMaterial({ color: "#c9b79a", roughness: 0.4, metalness: 0 }),
   /** Pellets: mate, de bajo brillo; el color por instancia aporta la variacion de lote. */
   pellet: new MeshStandardMaterial({ color: "#ffffff", roughness: 0.7, metalness: 0, envMapIntensity: 0.55 }),
+  /** Polimero reciclado en bruto, distinguible del acero del molde durante la compresion. */
+  plasticoReciclado: new MeshStandardMaterial({ color: "#4f9a70", roughness: 0.82, metalness: 0.02 }),
   viruta: new MeshStandardMaterial({ color: "#1b1e20", roughness: 0.85, metalness: 0 }),
   acrilico: new MeshPhysicalMaterial({ color: "#cfe3dd", transparent: true, opacity: 0.16, roughness: 0.12, side: DoubleSide, depthWrite: false }),
   pelicula: new MeshPhysicalMaterial({ color: "#e8f3ee", transparent: true, opacity: 0.12, roughness: 0.2, side: DoubleSide, depthWrite: false }),

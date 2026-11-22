@@ -38,7 +38,28 @@ export function SeccionFlujo({ webgl, reducido, lite }: Props) {
   const activoRef = useRef(0);
   const [activo, setActivo] = useState(0);
   const [sinEscena, setSinEscena] = useState(false);
+  const [escenaPreparada, setEscenaPreparada] = useState(false);
   const conEscena = webgl && !sinEscena;
+
+  useEffect(() => {
+    if (!conEscena || escenaPreparada) return;
+    const el = seccion.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setEscenaPreparada(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entrada]) => {
+        if (!entrada.isIntersecting) return;
+        setEscenaPreparada(true);
+        observer.disconnect();
+      },
+      { rootMargin: "900px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [conEscena, escenaPreparada]);
 
   const aplicar = useCallback(
     (p: number, forzar = false) => {
@@ -72,6 +93,8 @@ export function SeccionFlujo({ webgl, reducido, lite }: Props) {
   const avanzar = useCallback(
     (p: number) => {
       ultimo.current = p;
+      // La entrada coincide con el solapamiento entre escenas para evitar un corte.
+      seccion.current?.style.setProperty("--flujo-visible", Math.min(1, p / 0.14).toFixed(3));
       aplicar(p);
     },
     [aplicar],
@@ -84,9 +107,6 @@ export function SeccionFlujo({ webgl, reducido, lite }: Props) {
     return (
       <section className="flujo flujo-lista" aria-labelledby="flujo-titulo">
         <div className="flujo-lista-marco">
-          <p className="flujo-sello">
-            <span className="acento" aria-hidden="true" /> {MARCA_PROCESO}
-          </p>
           <h2 id="flujo-titulo">Del material al mobiliario</h2>
           <p className="flujo-nota">
             Vista 2D de la secuencia propuesta: la escena 3D no se está ejecutando. EcoUrban compraría pellets ya
@@ -118,13 +138,14 @@ export function SeccionFlujo({ webgl, reducido, lite }: Props) {
       data-hito={hito.id}
     >
       <div className="flujo-escenario">
-        <div className="fondo" aria-hidden="true" />
         <div className="lienzo">
-          <LimiteError fallback={<AlFallar onFallo={() => setSinEscena(true)} />}>
-            <Suspense fallback={null}>
-              <EscenaProceso lite={lite} reducido={reducido} />
-            </Suspense>
-          </LimiteError>
+          {escenaPreparada && (
+            <LimiteError fallback={<AlFallar onFallo={() => setSinEscena(true)} />}>
+              <Suspense fallback={null}>
+                <EscenaProceso lite={lite} reducido={reducido} />
+              </Suspense>
+            </LimiteError>
+          )}
         </div>
         <ol className="solo-lectores">
           {HITOS_NUMERADOS.map((h) => (
@@ -134,9 +155,6 @@ export function SeccionFlujo({ webgl, reducido, lite }: Props) {
           ))}
         </ol>
         <div className="flujo-ui" aria-hidden="true">
-          <p className="flujo-sello">
-            <span className="acento" /> {MARCA_PROCESO}
-          </p>
           <div className="flujo-pie" key={hito.id}>
             <ol className="flujo-ticks">
               {HITOS_NUMERADOS.map((h) => (
@@ -146,9 +164,16 @@ export function SeccionFlujo({ webgl, reducido, lite }: Props) {
             {hito.num && <p className="flujo-num">{hito.num}</p>}
             <h2 className="flujo-titulo">{hito.etiqueta}</h2>
             <p className="flujo-linea">{hito.linea}</p>
-            <p className="flujo-estatus">
-              <span className="punto" /> {hito.estatus}
-            </p>
+            {hito.medida ? (
+              <div className="flujo-medida">
+                <strong>{hito.medida.valor}</strong>
+                <span>{hito.medida.etiqueta}</span>
+              </div>
+            ) : (
+              <p className="flujo-estatus">
+                <span className="punto" /> {hito.estatus}
+              </p>
+            )}
           </div>
         </div>
       </div>

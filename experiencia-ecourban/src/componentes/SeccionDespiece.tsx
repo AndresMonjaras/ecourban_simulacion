@@ -8,24 +8,46 @@ import { BancaEstatica, IconoGrupo } from "./Iconos";
 
 const Escena = lazy(() => import("../escena/Escena"));
 
-/** Ambiente de parque (fondo generado): completo durante la intro ensamblada y fundido a estudio al entrar al despiece. */
+/** Mantiene el parque durante el despiece y lo funde al estudio al cerrar el recorrido. */
+const P_INICIO_FUNDIDO_PARQUE = 0.9;
+// El modelo ya regresó al encuadre base en 0.94; desde aquí la banca coincide con el puente de fabricación.
+const P_INICIO_FUNDIDO_ESCENA = 0.945;
+
 function calcularParque(p: number): number {
-  const t = Math.min(1, Math.max(0, (p - 0.17) / 0.07));
+  const t = Math.min(1, Math.max(0, (p - P_INICIO_FUNDIDO_PARQUE) / (1 - P_INICIO_FUNDIDO_PARQUE)));
   return 1 - t * t * (3 - 2 * t);
 }
 
 /** Todo el movimiento ambiental es funcion pura del progreso (sin tiempo ni azar); con movimiento reducido queda estatico. */
 function fijarAmbiente(el: HTMLElement | null, p: number, reducido: boolean) {
   if (!el) return;
-  const q = reducido ? 0 : Math.min(p, 0.24);
+  const q = reducido ? 0 : Math.min(p / P_INICIO_FUNDIDO_PARQUE, 1) * 0.24;
+  const profundidad = q / 0.24;
   const f = (v: number) => v.toFixed(3);
-  el.style.setProperty("--parque", f(calcularParque(p)));
+  const parque = calcularParque(p);
+  el.style.setProperty("--parque", f(parque));
+  // Reserva el último tramo para fundir la banca con la escena de fabricación.
+  const salida = 1 - Math.min(1, Math.max(0, (p - P_INICIO_FUNDIDO_ESCENA) / (1 - P_INICIO_FUNDIDO_ESCENA)));
+  el.style.setProperty("--despiece-visible", f(salida * salida * (3 - 2 * salida)));
+  document.documentElement.style.setProperty("--ambiente-taller", f(1 - parque));
   el.style.setProperty("--par-x", f(-q * 70));
   el.style.setProperty("--par-s", f(1 + q * 0.12));
   el.style.setProperty("--par-sway", f(Math.sin(q * 60) * 0.35));
   el.style.setProperty("--par-sx", f(Math.sin(q * 38 + 1) * 3.5));
   el.style.setProperty("--par-l", f(30 + q * 160));
   el.style.setProperty("--par-l2", f(Math.sin(q * 45) * 6));
+  // Los planos reciben desplazamientos distintos, pero todos dependen del mismo scroll.
+  el.style.setProperty("--par-fondo-x", f(-profundidad * 5));
+  el.style.setProperty("--par-medio-x", f(-profundidad * 13));
+  el.style.setProperty("--par-frente-x", f(-profundidad * 22));
+  el.style.setProperty("--par-s-fondo", f(1 + profundidad * 0.04));
+  el.style.setProperty("--par-s-medio", f(1 + profundidad * 0.08));
+  el.style.setProperty("--par-s-frente", f(1 + profundidad * 0.13));
+  el.style.setProperty("--par-bruma-x", f(Math.sin(profundidad * 9) * 14 - profundidad * 28));
+  el.style.setProperty("--par-bruma-y", f(profundidad * 9));
+  el.style.setProperty("--par-bruma-op", f(0.85 + Math.sin(profundidad * 7) * 0.15));
+  el.style.setProperty("--par-luz-x", f(profundidad * 32));
+  el.style.setProperty("--par-luz-rot", f(Math.sin(profundidad * 6) * 3));
 }
 
 const P_INICIO_CIERRE = 2960 / 3600; // ~0.822222: inicio del tramo de cierre
@@ -62,6 +84,8 @@ export function SeccionDespiece({ webgl, reducido, lite, capitulo, alCambiarCapi
   const capituloActual = useRef<GrupoId | null>(capitulo);
   const indicadorActual = useRef<string | null>(null);
   const [sinEscena, setSinEscena] = useState(false);
+  const [personaPreparada, setPersonaPreparada] = useState(false);
+  const personaPreparadaRef = useRef(false);
   const conEscena = webgl && !sinEscena;
 
   // La timeline Anime.js se crea una vez y se mueve exclusivamente con seek(progreso) del scroll.
@@ -136,6 +160,10 @@ export function SeccionDespiece({ webgl, reducido, lite, capitulo, alCambiarCapi
   const avanzar = useCallback(
     (p: number) => {
       ultimoProgreso.current = p;
+      if (!personaPreparadaRef.current && p >= 0.78) {
+        personaPreparadaRef.current = true;
+        setPersonaPreparada(true);
+      }
       const cierre = calcularCierre(p);
       const ind = indicadorParaProgreso(p);
 
@@ -209,16 +237,19 @@ export function SeccionDespiece({ webgl, reducido, lite, capitulo, alCambiarCapi
       <div ref={escenario} className="escenario" data-capitulo={capitulo ?? "intro"}>
         <div className="fondo" aria-hidden="true">
           <div className="parque">
-            <div className="parque-base" />
-            <div className="parque-copa" />
+            <div className="parque-cielo" />
+            <div className="parque-fondo" />
+            <div className="parque-medio" />
+            <div className="parque-frente" />
             <div className="parque-luz" />
+            <div className="parque-bruma" />
           </div>
         </div>
         <div className="lienzo">
           {conEscena ? (
             <LimiteError fallback={<ErrorEscena onFallo={() => setSinEscena(true)} />}>
               <Suspense fallback={null}>
-                <Escena lite={lite} />
+                <Escena lite={lite} personaPreparada={personaPreparada} />
               </Suspense>
             </LimiteError>
           ) : (
@@ -261,13 +292,6 @@ export function SeccionDespiece({ webgl, reducido, lite, capitulo, alCambiarCapi
             </div>
           </li>
         </ol>
-        <div
-          className="cierre-teaser"
-          aria-hidden={cierreActivo ? undefined : "true"}
-        >
-          <span className="cierre-acento" aria-hidden="true" />
-          <span className="cierre-texto">Producción y armado · próxima sección</span>
-        </div>
         <p className="desliza" aria-hidden="true">
           Desliza
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

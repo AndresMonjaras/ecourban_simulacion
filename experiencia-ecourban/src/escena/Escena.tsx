@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   ACESFilmicToneMapping,
   CanvasTexture,
@@ -8,14 +8,18 @@ import {
   type DirectionalLight,
   type Group,
   type HemisphereLight,
+  type Mesh,
   type MeshBasicMaterial,
   type PerspectiveCamera,
   type ShadowMaterial,
 } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { almacen } from "./almacen";
+import { posePersonaParaProgreso, type PoseCanonica } from "./animacionPersona";
 import { Banca } from "./Banca";
 import { vistaEfectiva } from "./enfoque";
+import { PERFIL_ACTION_SUIT } from "./perfilRigPersona";
+import { Persona } from "./Persona";
 import { useMediaQuery } from "../useProgresoScroll";
 
 const FOV_BASE = Math.tan((35 * Math.PI) / 360);
@@ -97,7 +101,7 @@ function Encuadre({ lite }: { lite: boolean }) {
   return null;
 }
 
-function Contenido({ lite }: { lite: boolean }) {
+function Contenido({ lite, personaPreparada }: { lite: boolean; personaPreparada: boolean }) {
   const reducido = useMediaQuery("(prefers-reduced-motion: reduce)");
   const raiz = useRef<Group>(null);
   const { camera, size } = useThree();
@@ -107,8 +111,25 @@ function Contenido({ lite }: { lite: boolean }) {
   const rebote = useRef<DirectionalLight>(null);
   const hemi = useRef<HemisphereLight>(null);
   const sombraMat = useRef<MeshBasicMaterial>(null);
+  const sombraPersona = useRef<Mesh>(null);
+  const sombraPieIzq = useRef<MeshBasicMaterial>(null);
+  const sombraPieDer = useRef<MeshBasicMaterial>(null);
+  const planoPieIzq = useRef<Mesh>(null);
+  const planoPieDer = useRef<Mesh>(null);
   const shadowMat = useRef<ShadowMaterial>(null);
   const texSombra = useMemo(crearSombraPiso, []);
+  const cachePose = useRef<{ p: number; reducido: boolean; pose: PoseCanonica } | null>(null);
+
+  const obtenerPosePersona = useCallback(() => {
+    const p = almacen.persona.progreso;
+    const prev = cachePose.current;
+    if (prev && prev.p === p && prev.reducido === reducido) return prev.pose;
+    const pose = posePersonaParaProgreso(p, reducido);
+    cachePose.current = { p, reducido, pose };
+    return pose;
+  }, [reducido]);
+
+  const personaVisible = useCallback(() => almacen.persona.visible, []);
 
   useEffect(() => () => texSombra.dispose(), [texSombra]);
 
@@ -134,6 +155,33 @@ function Contenido({ lite }: { lite: boolean }) {
     camera.position.set(tx + Math.sin(orb) * d, mirada + 0.4 + alto, tz + Math.cos(orb) * d);
     camera.lookAt(tx, mirada, tz);
     camera.updateMatrixWorld();
+
+    const posePersona = obtenerPosePersona();
+    if (sombraPersona.current) {
+      const caminando = almacen.persona.visible && posePersona.raiz.fase === "caminando";
+      sombraPersona.current.visible = caminando;
+      sombraPersona.current.position.set(posePersona.raiz.posicion[0], 0.004, posePersona.raiz.posicion[2]);
+    }
+    const actualizarSombraPie = (
+      plano: Mesh | null,
+      material: MeshBasicMaterial | null,
+      tobillo: [number, number, number],
+    ) => {
+      if (!plano || !material) return;
+      const caminando = almacen.persona.visible && posePersona.raiz.fase === "caminando";
+      plano.visible = caminando;
+      const cos = Math.cos(posePersona.raiz.giroY);
+      const sin = Math.sin(posePersona.raiz.giroY);
+      plano.position.set(
+        posePersona.raiz.posicion[0] + tobillo[0] * cos + tobillo[2] * sin,
+        0.006,
+        posePersona.raiz.posicion[2] - tobillo[0] * sin + tobillo[2] * cos,
+      );
+      const elevacion = Math.max(0, tobillo[1] - 0.122);
+      material.opacity = 0.38 * (1 - Math.min(0.72, elevacion / 0.065 * 0.72));
+    };
+    actualizarSombraPie(planoPieIzq.current, sombraPieIzq.current, posePersona.articulaciones.tobilloIzq);
+    actualizarSombraPie(planoPieDer.current, sombraPieDer.current, posePersona.articulaciones.tobilloDer);
 
     // Rig de estudio reactivo al capitulo activo mediante deltas ponderadas sobre la iluminacion base.
     // Con pesos cero el resultado es identico a las tomas base aprobadas (continuidad exacta).
@@ -224,6 +272,34 @@ function Contenido({ lite }: { lite: boolean }) {
       <directionalLight ref={rebote} position={[0, -2.2, 1.2]} intensity={0.28} color="#2d5440" />
       <group ref={raiz}>
         <Banca lite={lite} />
+        {personaPreparada && (
+          <Suspense fallback={null}>
+            <Persona
+              perfil={PERFIL_ACTION_SUIT}
+              obtenerPose={obtenerPosePersona}
+              visible={personaVisible}
+              sombras={!lite}
+            />
+          </Suspense>
+        )}
+        <mesh
+          ref={sombraPersona}
+          position={[0, 0.004, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          scale={[0.56, 0.24, 1]}
+          frustumCulled={false}
+        >
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial map={texSombra} transparent opacity={0.2} depthWrite={false} />
+        </mesh>
+        <mesh ref={planoPieIzq} position={[0, 0.006, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[0.2, 0.11, 1]} frustumCulled={false}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial ref={sombraPieIzq} map={texSombra} transparent opacity={0.38} depthWrite={false} />
+        </mesh>
+        <mesh ref={planoPieDer} position={[0, 0.006, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[0.2, 0.11, 1]} frustumCulled={false}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial ref={sombraPieDer} map={texSombra} transparent opacity={0.38} depthWrite={false} />
+        </mesh>
         {/* Sombra de contacto suave en el piso del estudio */}
         <mesh position={[0, 0.001, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[2.3, 0.95, 1]}>
           <planeGeometry args={[1, 1]} />
@@ -248,7 +324,7 @@ function Contenido({ lite }: { lite: boolean }) {
   );
 }
 
-export default function Escena({ lite }: { lite: boolean }) {
+export default function Escena({ lite, personaPreparada = true }: { lite: boolean; personaPreparada?: boolean }) {
   return (
     <Canvas
       frameloop="demand"
@@ -258,7 +334,7 @@ export default function Escena({ lite }: { lite: boolean }) {
       gl={{ antialias: !lite, alpha: true, powerPreference: "high-performance" }}
       aria-hidden="true"
     >
-      <Contenido lite={lite} />
+      <Contenido lite={lite} personaPreparada={personaPreparada} />
     </Canvas>
   );
 }

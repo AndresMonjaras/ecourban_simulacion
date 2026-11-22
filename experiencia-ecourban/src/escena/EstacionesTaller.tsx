@@ -23,6 +23,7 @@ const tri = (t: number, a: number, b: number, c: number) => tramo(t, a, b) - tra
 /** Virutas y polvo discretos: posiciones fijas por semilla; solo su escala depende del progreso. */
 function Virutas({ lite }: { lite: boolean }) {
   const malla = useRef<InstancedMesh>(null);
+  const ultima = useRef("");
   const n = lite ? 16 : 40;
   const dummy = useMemo(() => new Object3D(), []);
   const datos = useMemo(() => {
@@ -47,6 +48,15 @@ function Virutas({ lite }: { lite: boolean }) {
   useFrame(() => {
     const m = malla.current;
     if (!m) return;
+    const activo = (ep.sierra > 0.45 || ep.taladro > 0.15) && Math.abs(ep.tx - X_TALLER) < 6.5;
+    if (!activo) {
+      if (m.visible) m.visible = false;
+      return;
+    }
+    if (!m.visible) m.visible = true;
+    const firma = `${ep.sierra}|${ep.taladro}`;
+    if (firma === ultima.current) return;
+    ultima.current = firma;
     datos.forEach((d, i) => {
       const f = d.corte ? tramo(ep.sierra, 0.45 + d.t0 * 0.3, 0.7 + d.t0 * 0.3) : tramo(ep.taladro, d.hueco === 0 ? 0.15 + d.t0 * 0.1 : 0.7 + d.t0 * 0.1, d.hueco === 0 ? 0.3 : 0.85);
       dummy.position.set(d.x, Y_MESA + 0.004, d.z);
@@ -250,6 +260,24 @@ function crearBarrido() {
   return new CanvasTexture(c);
 }
 
+function crearEtiquetaPeso() {
+  const c = document.createElement("canvas");
+  c.width = 512;
+  c.height = 192;
+  const g = c.getContext("2d")!;
+  g.fillStyle = "#20282a";
+  g.fillRect(0, 0, c.width, c.height);
+  g.strokeStyle = "#8fe6b6";
+  g.lineWidth = 10;
+  g.strokeRect(8, 8, c.width - 16, c.height - 16);
+  g.fillStyle = "#f2f1ec";
+  g.font = "700 112px system-ui, sans-serif";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.fillText("100 kg", c.width / 2, c.height / 2 + 2);
+  return new CanvasTexture(c);
+}
+
 /** Cota/guia visual: barra fina con marcas en los extremos (sin cifras). */
 function Guia({ largo, vertical = false, y = 0, x = 0, z = 0, marcas = 0.1 }: { largo: number; vertical?: boolean; x?: number; y?: number; z?: number; marcas?: number }) {
   return (
@@ -276,12 +304,17 @@ function Armado({ lite }: { lite: boolean }) {
   const barrido = useRef<Mesh>(null);
   const pelicula = useRef<Group>(null);
   const caja_ = useRef<Group>(null);
+  const lastres = [useRef<Group>(null), useRef<Group>(null), useRef<Group>(null)];
+  const carga_ = useRef<Group>(null);
+  const matCarga = useMemo(() => MATERIAL.guia.clone(), []);
   const texBarrido = useMemo(crearBarrido, []);
+  const texPeso = useMemo(crearEtiquetaPeso, []);
+  const matPeso = useMemo(() => new MeshBasicMaterial({ map: texPeso, toneMapped: false }), [texPeso]);
   const matBarrido = useMemo(
     () => new MeshBasicMaterial({ map: texBarrido, transparent: true, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }),
     [texBarrido],
   );
-  useEffect(() => () => { texBarrido.dispose(); matBarrido.dispose(); }, [texBarrido, matBarrido]);
+  useEffect(() => () => { texBarrido.dispose(); matBarrido.dispose(); matCarga.dispose(); texPeso.dispose(); matPeso.dispose(); }, [texBarrido, matBarrido, matCarga, texPeso, matPeso]);
 
   useFrame(() => {
     if (dim.current) {
@@ -310,6 +343,17 @@ function Armado({ lite }: { lite: boolean }) {
       caja_.current.scale.set(Math.max(0.001, c), Math.max(0.001, c), Math.max(0.001, c));
       caja_.current.visible = c > 0.002;
     }
+    const c = ep.carga;
+    const niveles = [tramo(c, 0.02, 0.38), tramo(c, 0.31, 0.68), tramo(c, 0.61, 0.98)];
+    lastres.forEach((ref, i) => {
+      if (!ref.current) return;
+      ref.current.visible = niveles[i] > 0.004;
+      ref.current.position.y = 0.45 + 0.06 * (1 - niveles[i]);
+    });
+    if (carga_.current) {
+      carga_.current.visible = c > 0.005;
+      matCarga.opacity = 0.52 * c;
+    }
   });
 
   return (
@@ -337,6 +381,38 @@ function Armado({ lite }: { lite: boolean }) {
       <mesh ref={barrido} material={matBarrido} position={[-1.1, 0.5, 0.33]} visible={false}>
         <planeGeometry args={[0.55, 1.0]} />
       </mesh>
+      {/* Cargas visuales de 100 kg: se colocan una a una sobre el asiento, sin caida ni deformacion del modelo. */}
+      {[-0.48, 0, 0.48].map((x, i) => (
+        <group key={x} ref={lastres[i]} position={[x, 0.51, 0.15]} visible={false}>
+          <mesh geometry={cb(0.3, 0.024, 0.3, 0.014)} material={MATERIAL.aceroOscuro} position={[0, 0.012, 0]} castShadow receiveShadow />
+          <mesh geometry={cb(0.27, 0.035, 0.27, 0.018)} material={MATERIAL.guia} position={[0, 0.0415, 0]} />
+          {[0, 1, 2].map((nivel) => (
+            <group key={nivel} position={[0, 0.06 + nivel * 0.048, 0]}>
+              <mesh material={MATERIAL.acero} position={[0, 0.019, 0]} castShadow receiveShadow>
+                <cylinderGeometry args={[0.14, 0.14, 0.038, 28]} />
+              </mesh>
+              <mesh material={MATERIAL.aceroOscuro} position={[0, 0.038, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[0.101, 0.018, 8, 28]} />
+              </mesh>
+            </group>
+          ))}
+          <mesh geometry={cb(0.27, 0.1, 0.012, 0.008)} material={MATERIAL.aceroOscuro} position={[0, 0.12, 0.143]} />
+          <mesh material={matPeso} position={[0, 0.12, 0.15]}>
+            <planeGeometry args={[0.25, 0.09]} />
+          </mesh>
+        </group>
+      ))}
+      {/* Las guias iluminan ambos apoyos cuando la carga completa ya esta asentada. */}
+      <group ref={carga_} visible={false}>
+        {[-0.72, 0.72].map((x) => (
+          <group key={x} position={[x, 0, 0.42]}>
+            <mesh material={matCarga} position={[0, 0.225, 0]}>
+              <boxGeometry args={[0.012, 0.45, 0.014]} />
+            </mesh>
+            <mesh geometry={cb(0.16, 0.012, 0.16, 0.008)} material={matCarga} position={[0, 0.006, 0]} />
+          </group>
+        ))}
+      </group>
       {/* proteccion de empaque: pelicula translucida con esquineros */}
       <group ref={pelicula} visible={false}>
         <mesh geometry={cb(2.0, 1.0, 0.78, 0.05)} material={MATERIAL.pelicula} position={[0, 0.5, 0.02]} />

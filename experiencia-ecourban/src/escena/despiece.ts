@@ -38,6 +38,8 @@ const FIN_INTRO = 660; // 0.1833 de progreso: fin de orbita inicial y toma base 
 const FIN_RESPALDO = 1440; // 0.40 de progreso: fin de retorno a toma base 1 tras respaldo
 const FIN_ASIENTO = 2220; // 0.6167 de progreso: fin de retorno a toma base 2 tras asiento
 const FIN_SOPORTES = 2960; // 0.8222 de progreso: fin de retorno y reensamble de soportes hacia toma base
+const FIN_PERSONA = 3384; // 0.9400: ~163vh para caminar, girar y sentarse antes del empate final
+const VUELTA = Math.PI * 2;
 
 /**
  * Ventanas [salida, finSalida, inicioRetorno, finRetorno] dentro de DURACION.
@@ -97,6 +99,14 @@ export function crearLineaDespiece(escenario: HTMLElement | null, lite: boolean)
   const vista: EstadoVista = { ...baseGeneral, orb: 0 };
   const enfasis: Record<GrupoId, number> = { respaldo: 0, asiento: 0, soportes: 0 };
   const ui = { intro: 0, sombra: 1 };
+  const persona = { progreso: 0, visible: 0 };
+
+  const tomaCierrePersona: EstadoVista = {
+    ...baseGeneral,
+    zoom: lite ? 1.02 : 1.32,
+    mirada: lite ? 0.48 : 0.72,
+    alto: lite ? 0.08 : 0.16,
+  };
 
   const tl = createTimeline({ autoplay: false, defaults: { ease: "inOutSine" } });
 
@@ -127,10 +137,10 @@ export function crearLineaDespiece(escenario: HTMLElement | null, lite: boolean)
       t: 140,
       v: {
         giro: giroInicial,
-        orb: 1.05,
+        orb: (VUELTA * 140) / 600,
         zoom: lite ? 0.88 : 0.85,
         alto: 0.14,
-        fov: 32,
+        fov: 34,
         mirada: 0.46,
         tx: 0.03,
         tz: 0.04,
@@ -144,10 +154,10 @@ export function crearLineaDespiece(escenario: HTMLElement | null, lite: boolean)
       t: 290,
       v: {
         giro: giroInicial,
-        orb: 2.55,
+        orb: (VUELTA * 290) / 600,
         zoom: lite ? 0.92 : 0.9,
         alto: -0.03,
-        fov: 35,
+        fov: 34,
         mirada: 0.43,
         tx: 0,
         tz: 0,
@@ -161,10 +171,10 @@ export function crearLineaDespiece(escenario: HTMLElement | null, lite: boolean)
       t: 450,
       v: {
         giro: giroInicial,
-        orb: 4.35,
+        orb: (VUELTA * 450) / 600,
         zoom: lite ? 0.91 : 0.88,
         alto: 0.28,
-        fov: 33,
+        fov: 34,
         mirada: 0.47,
         tx: -0.02,
         tz: -0.02,
@@ -201,6 +211,11 @@ export function crearLineaDespiece(escenario: HTMLElement | null, lite: boolean)
     { t: 2490, v: focoSoportes, ease: "outCubic" },
     { t: 2770, v: focoSoportesDrift, ease: "linear" },
     { t: 2920, v: baseGeneral, ease: "inOutCubic" },
+    { t: FIN_SOPORTES, v: baseGeneral, ease: "linear" },
+    // Cierre: ligero aire superior durante la caminata y giro en escritorio, con retorno exacto a tomaBase al sentarse
+    { t: 3020, v: tomaCierrePersona, ease: "inOutSine" },
+    { t: 3276, v: tomaCierrePersona, ease: "linear" },
+    { t: FIN_PERSONA, v: baseGeneral, ease: "inOutCubic" },
     { t: DURACION, v: baseGeneral, ease: "linear" },
   ];
 
@@ -222,7 +237,7 @@ export function crearLineaDespiece(escenario: HTMLElement | null, lite: boolean)
     encadenar(
       vista,
       k,
-      cuadrosCamara.map((c) => [c.t, c.v[k], c.ease]),
+      cuadrosCamara.map((c) => [c.t, c.v[k], k === "orb" && c.t <= 600 ? "linear" : c.ease]),
     );
   }
 
@@ -295,6 +310,20 @@ export function crearLineaDespiece(escenario: HTMLElement | null, lite: boolean)
     [DURACION, 1, "linear"],
   ]);
 
+  // Progreso determinista de aproximacion, giro y sentado tras ensamblar la banca.
+  encadenar(persona, "progreso", [
+    [0, 0, "linear"],
+    [FIN_SOPORTES, 0, "linear"],
+    [FIN_PERSONA, 1, "linear"],
+    [DURACION, 1, "linear"],
+  ]);
+  encadenar(persona, "visible", [
+    [0, 0, "linear"],
+    [FIN_SOPORTES - 1, 0, "linear"],
+    [FIN_SOPORTES, 1, "linear"],
+    [DURACION, 1, "linear"],
+  ]);
+
   const aplicar = () => {
     for (const [id, e] of Object.entries(estado)) {
       const o = almacen.partes.get(id);
@@ -306,15 +335,26 @@ export function crearLineaDespiece(escenario: HTMLElement | null, lite: boolean)
     almacen.enfasis.asiento = enfasis.asiento;
     almacen.enfasis.soportes = enfasis.soportes;
     almacen.sombraContacto = ui.sombra;
+    // La orbita inicial recorre muchas mallas por frame; el piso conserva la
+    // sombra de contacto mientras se omite el costoso pase de sombras del GLB.
+    almacen.sombraModelo = ultimoT >= 600;
+    almacen.persona.visible = persona.visible >= 0.5;
+    almacen.persona.progreso = persona.progreso;
     if (escenario) {
       escenario.style.setProperty("--intro", ui.intro.toFixed(3));
     }
     almacen.invalidar?.();
   };
 
+  let ultimoT = -1;
+
   return {
     buscar(p) {
       const t = Math.min(1, Math.max(0, p)) * DURACION;
+      if (ultimoT >= 0 && (Math.abs(t - ultimoT) < 1e-3 || (t >= FIN_PERSONA && ultimoT >= FIN_PERSONA))) {
+        return;
+      }
+      ultimoT = t;
       tl.seek(t);
       aplicar();
     },
@@ -345,7 +385,11 @@ export function aplicarPoseEstatica(
   if (armada) {
     Object.assign(almacen.vista, tomaBase(lite));
     almacen.sombraContacto = 1;
+    almacen.persona.visible = true;
+    almacen.persona.progreso = 1;
   } else {
+    almacen.persona.visible = false;
+    almacen.persona.progreso = 0;
     almacen.vista.giro = lite ? -0.26 : -0.34;
     almacen.vista.orb = lite ? 0.24 : 0.3;
     almacen.vista.mirada = lite ? 0.54 : 0.56;

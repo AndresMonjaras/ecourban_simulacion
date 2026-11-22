@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import { CatmullRomCurve3, LatheGeometry, TubeGeometry, Vector2, Vector3, type Group } from "three";
-import { Pellets, X_MAQ, tramo } from "./EstacionesMateria";
+import { X_MAQ, tramo } from "./EstacionesMateria";
 import { caja } from "./geometriasProceso";
 import { ep } from "./lineaProceso";
 import { MATERIAL } from "./materialesProceso";
@@ -40,7 +40,7 @@ export function Maquila({ lite }: { lite: boolean }) {
   const izq = useRef<Group>(null);
   const der = useRef<Group>(null);
   const relleno = useRef<Group>(null);
-  const nCinta = lite ? 30 : 70;
+  const piezaMolde = useRef<Group>(null);
   const seg = lite ? 10 : 18;
   const tolva = useMemo(
     () =>
@@ -60,13 +60,19 @@ export function Maquila({ lite }: { lite: boolean }) {
   );
 
   useFrame(() => {
-    const gap = (1 - ep.molde) * 0.26;
+    const gap = 0.1 + (1 - ep.molde) * 0.2;
     if (izq.current) izq.current.position.x = -(gap / 2 + 0.18);
     if (der.current) der.current.position.x = gap / 2 + 0.18;
     if (relleno.current) {
       const f = tramo(ep.tolva, 0, 1);
       relleno.current.scale.set(1, Math.max(0.001, f), 1);
       relleno.current.visible = f > 0.01;
+    }
+    if (piezaMolde.current) {
+      const compresion = tramo(ep.compresion, 0, 1);
+      piezaMolde.current.scale.set(1 - compresion * 0.6, 1 + compresion * 0.12, 1);
+      piezaMolde.current.position.set(CX + ep.salida * 0.6, CY, 0);
+      piezaMolde.current.visible = ep.tolva > 0.62 && ep.salida < 0.995;
     }
   });
 
@@ -98,25 +104,6 @@ export function Maquila({ lite }: { lite: boolean }) {
           </group>
         );
       })}
-      <group>
-        <Pellets
-          n={nCinta}
-          lite={lite}
-          semilla={3}
-          escribir={(d, i, s) => {
-            const vis = tramo(ep.traslado, 0, 0.08) * (1 - tramo(ep.traslado, 0.9, 1));
-            if (vis < 0.01) return false;
-            const u = (ep.traslado * 2.4 + i / nCinta) % 1;
-            const lx = 4.5 + u * 2.4 + 0.05;
-            const ly = 0.74 + u * 0.88 + 0.07 + s.b * 0.04;
-            d.position.set(lx, ly, (s.c - 0.5) * 0.2);
-            d.rotation.set(s.a * 6, s.d * 6, s.e * 6);
-            d.scale.setScalar(vis);
-            return true;
-          }}
-        />
-      </group>
-
       {/* maquina de moldeo generica, sin marca */}
       <group position={[X_MAQ, 0, 0]}>
         {/* gabinete: pies, cuerpo, paneles de acceso, asas y rejilla */}
@@ -189,6 +176,10 @@ export function Maquila({ lite }: { lite: boolean }) {
               </mesh>
             ))}
           </group>
+        </group>
+        {/* Preforma visible en el molde: se comprime y permanece compacta hasta ser expulsada. */}
+        <group ref={piezaMolde} position={[CX, CY, 0]} visible={false}>
+          <mesh geometry={cb(0.24, 0.18, 0.24, 0.02)} material={MATERIAL.plasticoReciclado} castShadow />
         </group>
         {/* cilindro de cierre y vastago al extremo derecho */}
         <mesh geometry={cb(0.22, 0.34, 0.36, 0.03)} material={MATERIAL.maquina} position={[0.95, CY, 0]} castShadow receiveShadow />
