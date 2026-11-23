@@ -46,6 +46,56 @@ export function IlustracionPaso({ id }: { id: string }) {
           ))}
         </>
       )}
+      {id === "secado" && (
+        <>
+          <path d="M52 20h56l-5 36H57zM59 57h42l-12 22H71z" fill="#c8d3cd" stroke="#718079" strokeWidth="2" />
+          <rect x="65" y="13" width="30" height="8" rx="2" fill={n} />
+          <path d="M122 22h31v48h-31zM127 17h21v7" fill="#d5ded9" stroke="#718079" strokeWidth="2" />
+          <path d="M106 30h16M106 38h16" stroke={g} strokeWidth="4" />
+          {[0,1,2,3,4].map(i => <circle key={i} cx={68 + i * 7} cy={65 + (i % 2) * 7} r="3" fill={c} />)}
+        </>
+      )}
+      {id === "dosificacion" && (
+        <>
+          {[35,78,121].map((x,i) => <g key={x}><path d={`M${x} 16h30v28l-15 18-15-18z`} fill={i===1?"#94c8a8":"#c8d3cd"} stroke="#718079" strokeWidth="2" /><rect x={x+3} y="62" width="24" height="14" rx="3" fill={n} /></g>)}
+          <path d="M49 78h88M64 77l12 8 12-8 12 8 12-8 12 8" fill="none" stroke={g} strokeWidth="4" />
+        </>
+      )}
+      {id === "extrusion" && (
+        <>
+          <rect x="30" y="39" width="125" height="28" rx="8" fill="#aeb9b3" stroke="#64716a" strokeWidth="3" />
+          <path d="M42 52h99M47 44l14 16 14-16 14 16 14-16 14 16 14-16" fill="none" stroke={n} strokeWidth="4" />
+          <path d="M62 39V22h31v17M136 32h26" fill="none" stroke={g} strokeWidth="6" />
+          <circle cx="43" cy="53" r="18" fill="none" stroke={n} strokeWidth="7" />
+        </>
+      )}
+      {id === "peletizado" && (
+        <>
+          <rect x="25" y="42" width="96" height="34" rx="5" fill="#c8d3cd" stroke="#718079" strokeWidth="2" />
+          <circle cx="132" cy="50" r="23" fill="#d7ded9" stroke={g} strokeWidth="5" />
+          <path d="M132 27v46M109 50h46M116 34l32 32M148 34l-32 32" stroke={n} strokeWidth="3" />
+          {[0,1,2,3,4,5,6].map(i => <circle key={i} cx={135+(i%3)*12} cy={77+Math.floor(i/3)*5} r="3.5" fill={c} stroke="#aa9e89" />)}
+        </>
+      )}
+      {id === "moldes" && (
+        <>
+          {[28,78,128].map((x,i) => <g key={x}><rect x={x} y="26" width="42" height="47" rx="4" fill="#9ca6a1" stroke="#56625d" strokeWidth="3" /><rect x={x+7} y="34" width="28" height="7" rx="3" fill="#39443f"/><path d={`M${x+7} 55h28`} stroke={g} strokeWidth={5}/></g>)}
+        </>
+      )}
+      {id === "compresion" && (
+        <>
+          <path d="M37 15h126v14H37zM42 72h116v10H42zM52 29v43M148 29v43" fill="#aeb9b3" stroke="#64716a" strokeWidth="2" />
+          <rect x="88" y="28" width="24" height="30" rx="4" fill={n}/><path d="M100 58v12" stroke={n} strokeWidth="8"/>
+          <rect x="74" y="68" width="52" height="7" fill={g}/>
+        </>
+      )}
+      {id === "enfriamiento" && (
+        <>
+          <rect x="39" y="59" width="122" height="15" rx="4" fill="#7d8882"/>
+          <rect x="76" y="48" width="49" height="9" rx="3" fill={g}/>
+          {[60,139].map(x => <g key={x}><circle cx={x} cy="32" r="17" fill="#d1d9d4" stroke="#75827a" strokeWidth="2"/><path d={`M${x} 16v32M${x-16} 32h32`} stroke={n} strokeWidth="3"/></g>)}
+        </>
+      )}
       {id === "maquila" && (
         <>
           <path d="M20 40l80-22 80 22v40H20z" fill="#e7e2d6" stroke="#a89a82" strokeWidth="2" />
@@ -79,6 +129,14 @@ export function IlustracionPaso({ id }: { id: string }) {
           <path d="M146 40h22l10 18v16h-32z" fill="#f6f1e4" stroke="#a89a82" strokeWidth="2" />
           <circle cx="104" cy="78" r="8" fill="#333" />
           <circle cx="160" cy="78" r="8" fill="#333" />
+        </>
+      )}
+      {id === "inspeccion" && (
+        <>
+          <path d="M50 60h100M58 60V34h84v26M67 34V20h66v14" fill="none" stroke={n} strokeWidth="8" strokeLinejoin="round" />
+          <path d="M62 67h76" stroke={g} strokeWidth="7" />
+          <circle cx="147" cy="25" r="17" fill="none" stroke="#aeb9b3" strokeWidth="6"/><path d="m159 38 17 17" stroke="#aeb9b3" strokeWidth="6" strokeLinecap="round"/>
+          <path d="m79 47 10 9 18-20" fill="none" stroke="#78b78d" strokeWidth="4" strokeLinecap="round"/>
         </>
       )}
     </svg>

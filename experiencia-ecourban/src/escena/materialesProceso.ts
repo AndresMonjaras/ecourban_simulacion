@@ -61,6 +61,47 @@ const tMadera = microtextura("madera", 109, 3);
 
 const con = (t: Texture, bump: number) => ({ roughnessMap: t, bumpMap: t, bumpScale: bump });
 
+/** Malla metálica de resguardo: alfa en rejilla, tileable. */
+function rejilla(): Texture {
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const g = c.getContext("2d")!;
+  g.fillStyle = "#000";
+  g.fillRect(0, 0, 64, 64);
+  g.fillStyle = "#fff";
+  for (let i = 0; i < 64; i += 16) {
+    g.fillRect(i, 0, 2, 64);
+    g.fillRect(0, i, 64, 2);
+  }
+  const t = new CanvasTexture(c);
+  t.wrapS = t.wrapT = RepeatWrapping;
+  t.repeat.set(6, 6);
+  return t;
+}
+
+/** Moteado de polímero reciclado (motas claras sobre base media), tileable y determinista. */
+function moteado(semilla: number): Texture {
+  const tam = 128;
+  const rnd = aleatorio(semilla);
+  const c = document.createElement("canvas");
+  c.width = c.height = tam;
+  const g = c.getContext("2d")!;
+  g.fillStyle = "#9a9a9a";
+  g.fillRect(0, 0, tam, tam);
+  for (let i = 0; i < 420; i++) {
+    const v = rnd() < 0.7 ? Math.round(170 + rnd() * 80) : Math.round(40 + rnd() * 40);
+    g.fillStyle = `rgb(${v},${v},${v})`;
+    g.fillRect(rnd() * tam, rnd() * tam, 1 + rnd() * 2, 1 + rnd() * 1.6);
+  }
+  const t = new CanvasTexture(c);
+  t.wrapS = t.wrapT = RepeatWrapping;
+  t.repeat.set(4, 4);
+  return t;
+}
+
+const tRejilla = rejilla();
+const tMoteado = moteado(131);
+
 export const MATERIAL = {
   acero: new MeshStandardMaterial({ color: "#a2a9b0", roughness: 0.55, metalness: 0.78, ...con(tCepillado, 0.6) }),
   aceroOscuro: new MeshStandardMaterial({ color: "#3c4147", roughness: 0.6, metalness: 0.75, ...con(tCepillado, 0.5) }),
@@ -86,10 +127,35 @@ export const MATERIAL = {
   cinta: new MeshStandardMaterial({ color: "#c9b79a", roughness: 0.4, metalness: 0 }),
   /** Pellets: mate, de bajo brillo; el color por instancia aporta la variacion de lote. */
   pellet: new MeshStandardMaterial({ color: "#ffffff", roughness: 0.7, metalness: 0, envMapIntensity: 0.55 }),
+  /** Tono neutro para el compuesto previo al moldeo; no codifica el color real del lote. */
+  compuesto: new MeshStandardMaterial({ color: "#89918d", roughness: 0.78, metalness: 0.01 }),
   /** Polimero reciclado en bruto, distinguible del acero del molde durante la compresion. */
   plasticoReciclado: new MeshStandardMaterial({ color: "#4f9a70", roughness: 0.82, metalness: 0.02 }),
+  /** Señal visual cualitativa de zonas con calor; no codifica una temperatura. */
+  calor: new MeshStandardMaterial({ color: "#b95d32", emissive: "#8d2e12", emissiveIntensity: 0.18, roughness: 0.48, metalness: 0.28 }),
+  /** Acento frío para visualizar la estación de enfriamiento sin representar un valor de proceso. */
+  frio: new MeshStandardMaterial({ color: "#76aeb4", emissive: "#255a67", emissiveIntensity: 0.12, roughness: 0.42, metalness: 0.35 }),
   viruta: new MeshStandardMaterial({ color: "#1b1e20", roughness: 0.85, metalness: 0 }),
   acrilico: new MeshPhysicalMaterial({ color: "#cfe3dd", transparent: true, opacity: 0.16, roughness: 0.12, side: DoubleSide, depthWrite: false }),
   pelicula: new MeshPhysicalMaterial({ color: "#e8f3ee", transparent: true, opacity: 0.12, roughness: 0.2, side: DoubleSide, depthWrite: false }),
+  /** Gránulo de PET reciclado recibido: claro, translúcido en apariencia, facetado. */
+  pelletPet: new MeshStandardMaterial({ color: "#bfdccd", roughness: 0.22, metalness: 0.05, emissive: "#18342a", emissiveIntensity: 0.25, envMapIntensity: 1.1 }),
+  /** Compatibilizante polimérico: corriente separada, blanco opaco (color ilustrativo). */
+  pelletCompat: new MeshStandardMaterial({ color: "#eceee8", roughness: 0.62, metalness: 0 }),
+  /** Pellet del compuesto: tono neutro y opaco, distinto de la entrada; no codifica el color real del lote. */
+  pelletCompuesto: new MeshStandardMaterial({ color: "#7d8a82", roughness: 0.7, metalness: 0.02, map: tMoteado }),
+  /** Compuesto fundido dentro del cilindro y en el cordón: señal cualitativa de material caliente. */
+  fundido: new MeshStandardMaterial({ color: "#d8c29a", emissive: "#a8521c", emissiveIntensity: 0.35, roughness: 0.28, metalness: 0, transparent: true, opacity: 0.88 }),
+  cordon: new MeshStandardMaterial({ color: "#d9d1bb", emissive: "#5a3214", emissiveIntensity: 0.2, roughness: 0.32, metalness: 0 }),
+  /** Piezas moldeadas: colores del modelo visual de la banca, con moteado de reciclado. */
+  piezaSoporte: new MeshStandardMaterial({ color: "#3b7a52", roughness: 0.78, metalness: 0.02, map: tMoteado, ...con(tTapete, 0.6) }),
+  piezaListon: new MeshStandardMaterial({ color: "#4a4e52", roughness: 0.8, metalness: 0.02, map: tMoteado, ...con(tTapete, 0.6) }),
+  /** Saco de rafia para pellets del proveedor (sin marca). */
+  rafia: new MeshStandardMaterial({ color: "#d9d5ca", roughness: 0.92, metalness: 0, ...con(tTapete, 1.4) }),
+  /** Resguardo de seguridad de la prensa. */
+  amarillo: new MeshStandardMaterial({ color: "#c79a1e", roughness: 0.55, metalness: 0.25, ...con(tPintura, 0.4) }),
+  malla: new MeshStandardMaterial({ color: "#2a2e31", roughness: 0.5, metalness: 0.6, alphaMap: tRejilla, alphaTest: 0.5, side: DoubleSide }),
+  espuma: new MeshStandardMaterial({ color: "#eef0ee", roughness: 0.95, metalness: 0 }),
+  pantalla: new MeshStandardMaterial({ color: "#0d1412", roughness: 0.3, metalness: 0.2, emissive: "#1d3a2e", emissiveIntensity: 0.6 }),
   guia: new MeshStandardMaterial({ color: "#8fe6b6", emissive: "#8fe6b6", emissiveIntensity: 0.7, transparent: true, opacity: 0.85, toneMapped: false }),
 };

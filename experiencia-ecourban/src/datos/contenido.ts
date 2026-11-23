@@ -6,7 +6,6 @@ export interface Ficha {
   etiqueta: string;
   funcion: string;
   material: string;
-  proceso: string;
   detalle: string;
   /** Nombres estables de las partes 3D que resalta la ficha. */
   partes: string[];
@@ -22,9 +21,8 @@ export const FICHAS: Ficha[] = [
     etiqueta: "Respaldo",
     funcion: "apoyo",
     material: MATERIAL,
-    proceso: "maquila propuesta",
     detalle:
-      "Modelo conceptual compuesto con tres listones de respaldo y tornillería asociada. Es un modelo de referencia conceptual compuesto, no un CAD o fabricación verificada; medidas y tolerancias siguen pendientes de plano y BOM.",
+      "El modelo muestra tres listones grafito separados y sus fijaciones visibles, formando el plano de apoyo de la espalda.",
     partes: ["respaldo-liston-1", "respaldo-liston-2", "respaldo-liston-3"],
   },
   {
@@ -33,9 +31,8 @@ export const FICHAS: Ficha[] = [
     etiqueta: "Asiento",
     funcion: "asiento",
     material: MATERIAL,
-    proceso: "maquila propuesta",
     detalle:
-      "Modelo conceptual compuesto con cuatro listones de asiento (modelo de referencia con cuatro listones; número final, separación y sección pendientes de plano y BOM, no es un CAD de fabricación verificada).",
+      "El modelo muestra cuatro tablones grafito paralelos, distribuidos a lo ancho entre los soportes y con fijaciones visibles.",
     partes: ["asiento-tablon-1", "asiento-tablon-2", "asiento-tablon-3", "asiento-tablon-4"],
   },
   {
@@ -44,9 +41,8 @@ export const FICHAS: Ficha[] = [
     etiqueta: "Soportes",
     funcion: "estructura",
     material: MATERIAL,
-    proceso: "maquila propuesta",
     detalle:
-      "Dos soportes laterales verdes con apoyos y herrajes correspondientes en modelo conceptual compuesto. Es una referencia visual/conceptual, no un diseño CAD o resistente estructuralmente verificado.",
+      "Dos soportes laterales verdes reciben los listones del asiento y del respaldo; el modelo incluye apoyos inferiores y herrajes visibles.",
     partes: ["soporte-lateral-izq", "soporte-lateral-der"],
   },
 ];

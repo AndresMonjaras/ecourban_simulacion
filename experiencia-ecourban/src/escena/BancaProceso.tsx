@@ -12,14 +12,20 @@ interface Props {
   /** Si es true la banca queda completa; si no, se revela segun la timeline (ep). */
   armada?: boolean;
   lite: boolean;
+  progresivo?: boolean;
 }
 
 const revelar = () => ep.ensamble;
 
-export function BancaProceso({ x, giro = 0, armada = false, lite }: Props) {
+export function BancaProceso({ x, giro = 0, armada = false, lite, progresivo = false }: Props) {
   return (
     <group position={[x, 0, 0]} rotation={[0, giro, 0]}>
-      <BancaOficial sombras={!lite} revelado={armada ? null : revelar} registrarPartes={false} />
+      <BancaOficial
+        sombras={!lite}
+        revelado={armada || progresivo ? null : revelar}
+        registrarPartes={false}
+        ensambleProgresivo={progresivo}
+      />
     </group>
   );
 }

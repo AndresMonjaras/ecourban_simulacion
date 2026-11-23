@@ -235,6 +235,9 @@ export function aplicarEnfasisCapitulo(id: GrupoId | null, escenario?: HTMLEleme
   almacen.enfasis.respaldo = id === "respaldo" ? 1 : 0;
   almacen.enfasis.asiento = id === "asiento" ? 1 : 0;
   almacen.enfasis.soportes = id === "soportes" ? 1 : 0;
+  almacen.destello.respaldo = 0;
+  almacen.destello.asiento = 0;
+  almacen.destello.soportes = 0;
   if (escenario) {
     escenario.style.setProperty("--intro", id ? "1" : "0");
   }

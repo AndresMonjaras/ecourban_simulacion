@@ -1,147 +1,81 @@
-/**
- * Contrato narrativo de la continuacion "Proceso propuesto".
- * Fuente: Propuesta del Proyecto EcoUrban Innovatec, modelo asset-light y
- * "Flujo de Produccion y Ensamble". Todo es un proceso descrito en una propuesta:
- * no hay evidencia de planta, proveedor, equipos, ensayos ni produccion en operacion.
- */
-
 export type HitoId =
   | "puente"
   | "recepcion"
-  | "maquila"
+  | "secado"
+  | "dosificacion"
+  | "extrusion"
+  | "peletizado"
+  | "moldes"
+  | "compresion"
   | "enfriamiento"
-  | "preparacion"
   | "ensamble"
-  | "carga"
-  | "salida"
-  | "cierre";
+  | "inspeccion";
 
 export interface Hito {
   id: HitoId;
-  /** Numero visible ("01/07"); vacio en puente y cierre. */
   num: string;
-  /** Etiqueta corta visible sobre la escena. */
   etiqueta: string;
-  /** Explicacion de una linea. */
   linea: string;
-  /** Estatus documental visible sin abrir ninguna ficha. */
   estatus: string;
-  /** Dato destacado en el HUD para hitos que necesitan una cifra legible. */
-  medida?: { valor: string; etiqueta: string };
-  /** Apartado de la propuesta que lo respalda. */
   fuente: string;
-  /** Icono de IlustracionPaso para el fallback 2D. */
-  icono: "pellets" | "maquila" | "corte" | "ensamble" | "entrega";
-  /** Inicio y fin del tramo en progreso normalizado 0..1 de la seccion. */
+  icono: "pellets" | "secado" | "dosificacion" | "extrusion" | "peletizado" | "moldes" | "compresion" | "enfriamiento" | "ensamble" | "inspeccion";
   tramo: [number, number];
 }
 
-export const MARCA_PROCESO = "Proceso propuesto";
+export const MARCA_PROCESO = "Proceso técnico EcoUrban";
 
 export const HITOS: readonly Hito[] = [
   {
-    id: "puente",
-    num: "",
-    etiqueta: "Del material al mobiliario",
-    linea: "Modelo conceptual compuesto de la banca en visualización de referencia y, antes de ella, el material que la haría posible.",
-    estatus: "Recurso narrativo · visualización conceptual",
-    fuente: "Descripción general del modelo asset-light",
-    icono: "pellets",
-    tramo: [0, 0.11],
+    id: "puente", num: "", etiqueta: "De la banca al proceso", linea: "Del producto terminado a la transformación del material.",
+    estatus: "Secuencia de fabricación", fuente: "ECOURBAN — Guía técnica y visual del proceso de fabricación de la banca",
+    icono: "pellets", tramo: [0, 0.08],
   },
   {
-    id: "recepcion",
-    num: "01/06",
-    etiqueta: "Pellets rPET recibidos",
-    linea: "EcoUrban compraría pellets ya reciclados; el reciclaje primario queda aguas arriba.",
-    estatus: "Inspección de entrada propuesta · sin resultados",
-    fuente: "Flujo de Producción y Ensamble: recepción e inspección de pellets",
-    icono: "pellets",
-    tramo: [0.11, 0.26],
+    id: "recepcion", num: "01/10", etiqueta: "Recepción de pellets rPET", linea: "Pellets reciclados recibidos de proveedores especializados y preparados para el proceso.",
+    estatus: "Materia prima: PET reciclado", fuente: "Guía técnica EcoUrban · Recepción de pellets", icono: "pellets", tramo: [0.08, 0.17],
   },
   {
-    id: "maquila",
-    num: "02/06",
-    etiqueta: "Moldeo por maquila externa propuesta",
-    linea: "El moldeo por inyección o extrusión lo haría un taller externo, aún por definir.",
-    estatus: "Proveedor y equipo por definir",
-    fuente: "Modelo asset-light: moldeo mediante maquila",
-    icono: "maquila",
-    tramo: [0.26, 0.42],
+    id: "secado", num: "02/10", etiqueta: "Secado del material", linea: "El material pasa por una secadora deshumidificadora y una secadora de tolva.",
+    estatus: "Deshumidificación y alimentación", fuente: "Guía técnica EcoUrban · Secado", icono: "secado", tramo: [0.17, 0.26],
   },
   {
-    id: "enfriamiento",
-    num: "03/06",
-    etiqueta: "Enfriamiento · desmolde · recepción",
-    linea: "Las piezas salen del molde, reposan y llegan a la mesa de recepción del taller.",
-    estatus: "Pasos propuestos · piezas ilustrativas, no provienen del GLB · sin tiempos ni parámetros",
-    fuente: "Flujo de Producción y Ensamble: enfriamiento, desmolde y recepción de perfiles",
-    icono: "maquila",
-    tramo: [0.42, 0.56],
+    id: "dosificacion", num: "03/10", etiqueta: "Dosificación de componentes", linea: "El PET reciclado y el compatibilizante polimérico se dosifican y se combinan.",
+    estatus: "Mezcla preparada para extrusión", fuente: "Guía técnica EcoUrban · Dosificación", icono: "dosificacion", tramo: [0.26, 0.35],
   },
   {
-    id: "preparacion",
-    num: "04/06",
-    etiqueta: "Corte · perforado · acabado",
-    linea: "Un perfil se corta, se perfora con guía y recibe acabado de borde.",
-    estatus: "Operaciones propuestas · perfil ilustrativo, no proviene del GLB · sin medidas de fabricación",
-    fuente: "Flujo de Producción y Ensamble: corte, perforado guiado y maquinado de bordes",
-    icono: "corte",
-    tramo: [0.56, 0.7],
+    id: "extrusion", num: "04/10", etiqueta: "Extrusión de doble husillo", linea: "El material se funde, mezcla y homogeniza mediante calor y transporte de doble husillo.",
+    estatus: "Compuesto fundido y homogenizado", fuente: "Guía técnica EcoUrban · Extrusión", icono: "extrusion", tramo: [0.35, 0.44],
   },
   {
-    id: "ensamble",
-    num: "05/07",
-    etiqueta: "Ensamble mecánico",
-    linea: "La banca conceptual se revela armada de abajo a arriba; tornillos y piezas de manufactura son ilustrativos y no constituyen CAD verificado.",
-    estatus: "Tornillería inoxidable propuesta · por validar con BOM",
-    fuente: "Flujo de Producción y Ensamble: ensamble con tornillería inoxidable",
-    icono: "ensamble",
-    tramo: [0.7, 0.805],
+    id: "peletizado", num: "05/10", etiqueta: "Peletización del compuesto", linea: "El compuesto extruido se corta en pellets para alimentar la siguiente etapa.",
+    estatus: "Pellets del compuesto preparado", fuente: "Guía técnica EcoUrban · Peletización", icono: "peletizado", tramo: [0.44, 0.53],
   },
   {
-    id: "carga",
-    num: "06/07",
-    etiqueta: "Prueba de capacidad",
-    linea: "Representación visual de tres cargas de referencia de 100 kg; no representa un ensayo de carga.",
-    estatus: "Capacidad declarada como objetivo · pendiente de ensayo",
-    medida: { valor: "250–300 kg", etiqueta: "DECLARADA · NO ENSAYADA" },
-    fuente: "Propuesta del Proyecto EcoUrban Innovatec, sección 3.1: especificación declarada; no se aportó ensayo.",
-    icono: "ensamble",
-    tramo: [0.805, 0.885],
+    id: "moldes", num: "06/10", etiqueta: "Alimentación de moldes", linea: "El compuesto se dirige a moldes de acero separados para asiento, respaldo y soportes.",
+    estatus: "Moldes de acero", fuente: "Guía técnica EcoUrban · Alimentación de moldes", icono: "moldes", tramo: [0.53, 0.62],
   },
   {
-    id: "salida",
-    num: "07/07",
-    etiqueta: "Inspección final · empaque · despacho",
-    linea: "Se revisan dimensión, alineación y acabado; luego, protección y área de salida.",
-    estatus: "Revisión, empaque y despacho propuestos",
-    fuente: "Flujo de Producción y Ensamble: inspección, empaque y despacho",
-    icono: "entrega",
-    tramo: [0.885, 0.965],
+    id: "compresion", num: "07/10", etiqueta: "Moldeo por compresión", linea: "Una prensa hidráulica aplica calor y presión al compuesto dentro del molde.",
+    estatus: "Prensa hidráulica de compresión", fuente: "Guía técnica EcoUrban · Moldeo por compresión", icono: "compresion", tramo: [0.62, 0.71],
   },
   {
-    id: "cierre",
-    num: "",
-    etiqueta: "Flujo propuesto",
-    linea: "Modelo conceptual de la banca armado. La capacidad de 250–300 kg es declarada y sigue pendiente de ensayo; el flujo mostrado es una propuesta.",
-    estatus: "Capacidad declarada · proceso conceptual no verificado",
-    fuente: "Propuesta del Proyecto EcoUrban Innovatec",
-    icono: "entrega",
-    tramo: [0.965, 1],
+    id: "enfriamiento", num: "08/10", etiqueta: "Enfriamiento y desmoldeo", linea: "Las piezas moldeadas se enfrían y se extraen del molde.",
+    estatus: "Componentes separados", fuente: "Guía técnica EcoUrban · Enfriamiento y desmoldeo", icono: "enfriamiento", tramo: [0.71, 0.80],
+  },
+  {
+    id: "ensamble", num: "09/10", etiqueta: "Acabado y ensamblaje", linea: "Los componentes reciben acabado general y se unen con tornillería inoxidable A2 y A4.",
+    estatus: "Asiento, respaldo y soportes", fuente: "Guía técnica EcoUrban · Acabado y ensamblaje", icono: "ensamble", tramo: [0.80, 0.89],
+  },
+  {
+    id: "inspeccion", num: "10/10", etiqueta: "Inspección y preparación", linea: "La banca se revisa visualmente, se limpia y se prepara para empaque e instalación.",
+    estatus: "Producto preparado para entrega", fuente: "Guía técnica EcoUrban · Inspección, limpieza y preparación", icono: "inspeccion", tramo: [0.89, 1],
   },
 ];
 
-/** Los seis hitos numerados (sin puente ni cierre). */
 export const HITOS_NUMERADOS = HITOS.filter((h) => h.num !== "");
 
-export const AVISO_PROCESO =
-  "Visualización conceptual con modelo de referencia compuesto: las piezas ilustrativas de manufactura son propuestas y ni geometría, uniones ni tornillería certifican planos ni BOM.";
-
-/** Indice de hito para un progreso 0..1; discreto y determinista. */
+/** Índice discreto del capítulo activo; el puente corresponde al producto terminado. */
 export function hitoParaProgreso(p: number): number {
-  for (let i = HITOS.length - 1; i >= 0; i--) {
-    if (p >= HITOS[i].tramo[0]) return i;
-  }
+  for (let i = HITOS.length - 1; i >= 0; i--) if (p >= HITOS[i].tramo[0]) return i;
   return 0;
 }
