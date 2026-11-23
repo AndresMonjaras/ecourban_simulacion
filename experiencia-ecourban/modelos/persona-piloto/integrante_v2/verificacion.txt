@@ -1,0 +1,28 @@
+huesos: fuente 67, candidato 67; nombres/padres/transform de reposo identicos: true []
+skinned meshes: 1 (Integrante_EcoUrban 88493v); joints del skin: 67; orden de joints e inverseBindMatrices identicos a la fuente: true
+pesos: suma [1.000000, 1.000000], negativos 0, NaN 0, indices fuera de rango 0
+material: Integrante_EcoUrban map=true normalMap=true roughMap=true vertexColors=false
+  rotar Head.x 0.5 rad: vertices movidos 10668 (dominantes de Head: 7622), desplazamiento max 0.130 m, no finitos 0
+  rotar Neck.y 0.5 rad: vertices movidos 12400 (dominantes de Neck: 367), desplazamiento max 0.098 m, no finitos 0
+  rotar Spine.x 0.4 rad: vertices movidos 59898 (dominantes de Spine: 396), desplazamiento max 0.293 m, no finitos 0
+  rotar Spine2.z 0.3 rad: vertices movidos 53836 (dominantes de Spine2: 276), desplazamiento max 0.193 m, no finitos 0
+  rotar LeftArm.z -0.8 rad: vertices movidos 18278 (dominantes de LeftArm: 2073), desplazamiento max 0.509 m, no finitos 0
+  rotar RightArm.z 0.8 rad: vertices movidos 18061 (dominantes de RightArm: 2650), desplazamiento max 0.509 m, no finitos 0
+  rotar LeftForeArm.x 1 rad: vertices movidos 14398 (dominantes de LeftForeArm: 2953), desplazamiento max 0.339 m, no finitos 0
+  rotar RightForeArm.x 1 rad: vertices movidos 14110 (dominantes de RightForeArm: 2847), desplazamiento max 0.339 m, no finitos 0
+  rotar LeftUpLeg.x -1 rad: vertices movidos 17946 (dominantes de LeftUpLeg: 6076), desplazamiento max 0.992 m, no finitos 0
+  rotar RightUpLeg.x -1 rad: vertices movidos 17801 (dominantes de RightUpLeg: 6427), desplazamiento max 0.990 m, no finitos 0
+  rotar LeftLeg.x 1.2 rad: vertices movidos 8376 (dominantes de LeftLeg: 2065), desplazamiento max 0.673 m, no finitos 0
+  rotar RightLeg.x 1.2 rad: vertices movidos 8159 (dominantes de RightLeg: 2271), desplazamiento max 0.672 m, no finitos 0
+  rotar LeftFoot.x 0.4 rad: vertices movidos 6297 (dominantes de LeftFoot: 4338), desplazamiento max 0.098 m, no finitos 0
+  reposo restaurado, residuo max 0.00e+0 m
+bbox fuente: 1.063 x 1.871 x 0.377 m, y [-0.001, 1.871]
+bbox candidato: 0.982 x 1.860 x 0.433 m, y [-0.006, 1.853]
+
+# poses de la app (posePersonaParaProgreso + crearAdaptadorRigPersona reales)
+v2 {"pie":{"progreso":0,"fase":"caminando","mallas":["Integrante_EcoUrban"],"vertices":88493,"noFinitos":0,"yMin":-0.001,"yMax":1.76},"marcha_a":{"progreso":0.17,"fase":"caminando","mallas":["Integrante_EcoUrban"],"vertices":88493,"noFinitos":0,"yMin":-0.022,"yMax":1.751},"marcha_b":{"progreso":0.26,"fase":"caminando","mallas":["Integrante_EcoUrban"],"vertices":88493,"noFinitos":0,"yMin":-0.01,"yMax":1.756},"sentandose":{"progreso":0.86,"fase":"sentandose","mallas":["Integrante_EcoUrban"],"vertices":88493,"noFinitos":0,"yMin":-0.047,"yMax":1.459},"sentado":{"progreso":1,"fase":"sentado","mallas":["Integrante_EcoUrban"],"vertices":88493,"noFinitos":0,"yMin":-0.015,"yMax":1.363}}
+
+c79b78f3921ef5bafe754721d7be4c8fca12f5daa7ad1d250c102672e339b080  /home/omarbolanos/Documentos/REPOSITORIOS/ecourban_simulacion/experiencia-ecourban/public/models/persona-articulada.glb
+00bff8d662b9fb730621482d4d0d845f4a7210991cc90e0370a2a1255a0d4862  /home/omarbolanos/Documentos/REPOSITORIOS/ecourban_simulacion/experiencia-ecourban/public/models/persona-ecourban-v8.glb
+ec0c5632497ae023e30b324d3a9534fcad8e3ff9df5dc65aedb0c52cdd94934c  /home/omarbolanos/Documentos/REPOSITORIOS/ecourban_simulacion/experiencia-ecourban/public/models/persona-articulada-ropa-ecourban-v1.glb
+3bfe19316749baa71e861a53d7e0caa677ed96ac879b0709df57bafb8f0a51c1  /home/omarbolanos/Documentos/REPOSITORIOS/ecourban_simulacion/experiencia-ecourban/public/models/persona-articulada-integrante-v2.glb

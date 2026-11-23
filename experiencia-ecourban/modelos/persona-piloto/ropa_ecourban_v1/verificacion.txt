@@ -1,0 +1,20 @@
+accessors originales identicos: True 15 -> 25
+nodos 0..69 identicos: True | Armature hijos [66, 68, 69] -> [66, 68, 69, 70]
+skins identicos: True | nskins 1 | joints 67
+mallas originales identicas: True | nuevas: ['Gorra_EcoUrban']
+materiales originales identicos: True | nuevos: ['Gorra_Negro', 'Gorra_Verde']
+imagen 0 BASE_COLOR_TEXTURE_ALPHA (1024, 1024, 4) texeles cambiados 22.9% alpha igual True
+imagen 1 NORMAL_TEXTURE_ALPHA (1024, 1024, 4) texeles cambiados 5.7% alpha igual True
+imagen 2 METALLIC_ROUGHNESS_TEXTURE_ALPHA (1024, 1024, 4) texeles cambiados 0.0% alpha igual True
+FUENTE    skinned: Wolf3D_Avatar(8882v), Wolf3D_Avatar_Transparent(748v) | huesos: 67 | faltan: [] | esqueleto unico compartido: true | bbox 1.063x1.871x0.377 min.y -0.001
+CANDIDATO skinned: Wolf3D_Avatar(8882v), Wolf3D_Avatar_Transparent(748v), Gorra_EcoUrban_1(1299v), Gorra_EcoUrban_2(38v) | huesos: 67 | faltan: [] | esqueleto unico compartido: true | bbox 1.063x1.881x0.387 min.y -0.001
+  gorra: vertice desplazado 0.228 m tras rotar Head/Spine1; distancia a Head 0.1983 -> 0.1983 (rigida)
+jerarquia fuente preservada: true | nodos extra: [
+  'Gorra_EcoUrban:Group',
+  'Gorra_EcoUrban_1:SkinnedMesh',
+  'Gorra_EcoUrban_2:SkinnedMesh'
+]
+materiales: Wolf3D_Avatar->Wolf3D_Avatar[map][normal] | Wolf3D_Avatar_Transparent->Wolf3D_Avatar_Transparent[map][normal] | Gorra_EcoUrban_1->Gorra_Negro | Gorra_EcoUrban_2->Gorra_Verde
+c79b78f3921ef5bafe754721d7be4c8fca12f5daa7ad1d250c102672e339b080  /home/omarbolanos/Documentos/REPOSITORIOS/ecourban_simulacion/experiencia-ecourban/public/models/persona-articulada.glb
+ec0c5632497ae023e30b324d3a9534fcad8e3ff9df5dc65aedb0c52cdd94934c  /home/omarbolanos/Documentos/REPOSITORIOS/ecourban_simulacion/experiencia-ecourban/public/models/persona-articulada-ropa-ecourban-v1.glb
+00bff8d662b9fb730621482d4d0d845f4a7210991cc90e0370a2a1255a0d4862  /home/omarbolanos/Documentos/REPOSITORIOS/ecourban_simulacion/experiencia-ecourban/public/models/persona-ecourban-v8.glb
