@@ -1,0 +1,27 @@
+== sha256 fuentes (intactas)
+44ecc399833e5b6f50ee1fc4838b19eff07ef3e448b0b88124532381bf0da951  /home/omarbolanos/Descargas/6764f31af256049aadd2045db0fedcf7(1).glb
+c79b78f3921ef5bafe754721d7be4c8fca12f5daa7ad1d250c102672e339b080  public/models/persona-articulada.glb
+1a73ed3afe19cdb8f1fe080defba0064a915f2e13edef4eeca57f4affdeb61c9  /home/omarbolanos/Documentos/REPOSITORIOS/ecourban_simulacion/experiencia-ecourban/modelos/persona-piloto/integrante_v4_generado/persona-articulada-integrante-v4.glb
+== verify_v4
+huesos: fuente 67, candidato 67; nombres y padres identicos (reposo ajustado al modelo): true []
+skinned meshes: 1 (Integrante_Generado 832005v); joints del skin: 67; orden de joints identico a la fuente: true
+pesos: suma [1.000000, 1.000000], negativos 0, NaN 0, indices fuera de rango 0
+material: Material.001 map=true normalMap=true roughMap=true vertexColors=true
+  rotar Head.x 0.5 rad: vertices movidos 151304 (dominantes de Head: 116106), desplazamiento max 0.176 m, no finitos 0
+  rotar Neck.y 0.5 rad: vertices movidos 226478 (dominantes de Neck: 35511), desplazamiento max 0.166 m, no finitos 0
+  rotar Spine.x 0.4 rad: vertices movidos 492588 (dominantes de Spine: 60191), desplazamiento max 0.342 m, no finitos 0
+  rotar Spine2.z 0.3 rad: vertices movidos 372465 (dominantes de Spine2: 34449), desplazamiento max 0.297 m, no finitos 0
+  rotar LeftArm.z -0.8 rad: vertices movidos 76262 (dominantes de LeftArm: 29054), desplazamiento max 0.560 m, no finitos 0
+  rotar RightArm.z 0.8 rad: vertices movidos 72179 (dominantes de RightArm: 28537), desplazamiento max 0.550 m, no finitos 0
+  rotar LeftForeArm.x 1 rad: vertices movidos 38154 (dominantes de LeftForeArm: 16021), desplazamiento max 0.085 m, no finitos 0
+  rotar RightForeArm.x 1 rad: vertices movidos 35141 (dominantes de RightForeArm: 16159), desplazamiento max 0.061 m, no finitos 0
+  rotar LeftUpLeg.x -1 rad: vertices movidos 184874 (dominantes de LeftUpLeg: 79450), desplazamiento max 0.956 m, no finitos 0
+  rotar RightUpLeg.x -1 rad: vertices movidos 182866 (dominantes de RightUpLeg: 78799), desplazamiento max 0.955 m, no finitos 0
+  rotar LeftLeg.x 1.2 rad: vertices movidos 86765 (dominantes de LeftLeg: 23655), desplazamiento max 0.625 m, no finitos 0
+  rotar RightLeg.x 1.2 rad: vertices movidos 86775 (dominantes de RightLeg: 23696), desplazamiento max 0.623 m, no finitos 0
+  rotar LeftFoot.x 0.4 rad: vertices movidos 55183 (dominantes de LeftFoot: 41009), desplazamiento max 0.108 m, no finitos 0
+  reposo restaurado, residuo max 0.00e+0 m
+bbox fuente: 1.063 x 1.871 x 0.377 m, y [-0.001, 1.871]
+bbox candidato: 1.929 x 1.994 x 0.473 m, y [0.000, 1.994]
+== poses reales de la app (alturaCaderaReposo 0.9795)
+v4 {"pie":{"progreso":0,"fase":"caminando","mallas":["Integrante_Generado"],"vertices":832005,"noFinitos":0,"yMin":0.022,"yMax":1.94},"marcha_a":{"progreso":0.17,"fase":"caminando","mallas":["Integrante_Generado"],"vertices":832005,"noFinitos":0,"yMin":-0.008,"yMax":1.931},"marcha_b":{"progreso":0.26,"fase":"caminando","mallas":["Integrante_Generado"],"vertices":832005,"noFinitos":0,"yMin":0.006,"yMax":1.935},"sentandose":{"progreso":0.86,"fase":"sentandose","mallas":["Integrante_Generado"],"vertices":832005,"noFinitos":0,"yMin":-0.012,"yMax":1.638},"sentado":{"progreso":1,"fase":"sentado","mallas":["Integrante_Generado"],"vertices":832005,"noFinitos":0,"yMin":0.027,"yMax":1.542}}

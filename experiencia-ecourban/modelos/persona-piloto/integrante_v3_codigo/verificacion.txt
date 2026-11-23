@@ -1,0 +1,29 @@
+huesos: fuente 67, candidato 67; nombres/padres/transform de reposo identicos: true []
+skinned meshes: 6 (Integrante_EcoUrban_v3_1 6448v,Integrante_EcoUrban_v3_2 23692v,Integrante_EcoUrban_v3_3 4834v,Integrante_EcoUrban_v3_4 11524v,Integrante_EcoUrban_v3_5 756v,Integrante_EcoUrban_v3_6 2566v); joints del skin: 67; orden de joints e inverseBindMatrices identicos a la fuente: true
+pesos (6 mallas): suma [1.000000, 1.000000], negativos 0, NaN 0, indices fuera de rango 0
+materiales: Integrante_Tela(map=false,vertexColors=true) Integrante_Piel(map=false,vertexColors=true) Integrante_Tela(map=false,vertexColors=true) Integrante_Calzado(map=false,vertexColors=true) Integrante_Ojos(map=false,vertexColors=true) Integrante_Gorra(map=false,vertexColors=true)
+  rotar Head.x 0.5 rad: vertices movidos 10906 (dominantes de Head: 10778), desplazamiento max 0.124 m, no finitos 0
+  rotar Neck.y 0.5 rad: vertices movidos 11690 (dominantes de Neck: 696), desplazamiento max 0.073 m, no finitos 0
+  rotar Spine.x 0.4 rad: vertices movidos 25465 (dominantes de Spine: 989), desplazamiento max 0.297 m, no finitos 0
+  rotar Spine2.z 0.3 rad: vertices movidos 23581 (dominantes de Spine2: 1232), desplazamiento max 0.216 m, no finitos 0
+  rotar LeftShoulder.z 0.3 rad: vertices movidos 5713 (dominantes de LeftShoulder: 134), desplazamiento max 0.157 m, no finitos 0
+  rotar LeftArm.z -0.8 rad: vertices movidos 5369 (dominantes de LeftArm: 2272), desplazamiento max 0.568 m, no finitos 0
+  rotar RightArm.z 0.8 rad: vertices movidos 5369 (dominantes de RightArm: 2272), desplazamiento max 0.568 m, no finitos 0
+  rotar LeftForeArm.x 1 rad: vertices movidos 2918 (dominantes de LeftForeArm: 1248), desplazamiento max 0.401 m, no finitos 0
+  rotar RightForeArm.x 1 rad: vertices movidos 2918 (dominantes de RightForeArm: 1248), desplazamiento max 0.401 m, no finitos 0
+  rotar LeftHand.x 0.5 rad: vertices movidos 1696 (dominantes de LeftHand: 553), desplazamiento max 0.105 m, no finitos 0
+  rotar LeftUpLeg.x -1 rad: vertices movidos 10840 (dominantes de LeftUpLeg: 3088), desplazamiento max 0.999 m, no finitos 0
+  rotar RightUpLeg.x -1 rad: vertices movidos 10840 (dominantes de RightUpLeg: 3088), desplazamiento max 0.999 m, no finitos 0
+  rotar LeftLeg.x 1.2 rad: vertices movidos 7714 (dominantes de LeftLeg: 1600), desplazamiento max 0.678 m, no finitos 0
+  rotar RightLeg.x 1.2 rad: vertices movidos 7714 (dominantes de RightLeg: 1600), desplazamiento max 0.678 m, no finitos 0
+  rotar LeftFoot.x 0.4 rad: vertices movidos 6120 (dominantes de LeftFoot: 3905), desplazamiento max 0.106 m, no finitos 0
+  reposo restaurado, residuo max 0.00e+0 m (vertices totales 49820)
+bbox fuente: 1.063 x 1.871 x 0.377 m, y [-0.001, 1.871]
+bbox candidato: 1.079 x 1.865 x 0.355 m, y [-0.001, 1.864]
+
+# poses reales de la app
+v3 {"pie":{"progreso":0,"fase":"caminando","mallas":["Integrante_EcoUrban_v3_1","Integrante_EcoUrban_v3_2","Integrante_EcoUrban_v3_3","Integrante_EcoUrban_v3_4","Integrante_EcoUrban_v3_5","Integrante_EcoUrban_v3_6"],"vertices":49820,"noFinitos":0,"yMin":-0.011,"yMax":1.757},"marcha_a":{"progreso":0.17,"fase":"caminando","mallas":["Integrante_EcoUrban_v3_1","Integrante_EcoUrban_v3_2","Integrante_EcoUrban_v3_3","Integrante_EcoUrban_v3_4","Integrante_EcoUrban_v3_5","Integrante_EcoUrban_v3_6"],"vertices":49820,"noFinitos":0,"yMin":-0.021,"yMax":1.748},"marcha_b":{"progreso":0.26,"fase":"caminando","mallas":["Integrante_EcoUrban_v3_1","Integrante_EcoUrban_v3_2","Integrante_EcoUrban_v3_3","Integrante_EcoUrban_v3_4","Integrante_EcoUrban_v3_5","Integrante_EcoUrban_v3_6"],"vertices":49820,"noFinitos":0,"yMin":-0.006,"yMax":1.752},"sentandose":{"progreso":0.86,"fase":"sentandose","mallas":["Integrante_EcoUrban_v3_1","Integrante_EcoUrban_v3_2","Integrante_EcoUrban_v3_3","Integrante_EcoUrban_v3_4","Integrante_EcoUrban_v3_5","Integrante_EcoUrban_v3_6"],"vertices":49820,"noFinitos":0,"yMin":-0.057,"yMax":1.459},"sentado":{"progreso":1,"fase":"sentado","mallas":["Integrante_EcoUrban_v3_1","Integrante_EcoUrban_v3_2","Integrante_EcoUrban_v3_3","Integrante_EcoUrban_v3_4","Integrante_EcoUrban_v3_5","Integrante_EcoUrban_v3_6"],"vertices":49820,"noFinitos":0,"yMin":-0.025,"yMax":1.359}}
+
+c79b78f3921ef5bafe754721d7be4c8fca12f5daa7ad1d250c102672e339b080  /home/omarbolanos/Documentos/REPOSITORIOS/ecourban_simulacion/experiencia-ecourban/public/models/persona-articulada.glb
+36668cdcc66b613b0926b9a87cb9b9fafdbed0d49bf5c6b57427e220785c501c  /home/omarbolanos/Documentos/REPOSITORIOS/ecourban_simulacion/experiencia-ecourban/modelos/persona-piloto/integrante_v3_codigo/persona-articulada-integrante-v3.glb
+-rw-r--r--. 1 omarbolanos omarbolanos 3004296 nov 23 00:14 /home/omarbolanos/Documentos/REPOSITORIOS/ecourban_simulacion/experiencia-ecourban/modelos/persona-piloto/integrante_v3_codigo/persona-articulada-integrante-v3.glb
