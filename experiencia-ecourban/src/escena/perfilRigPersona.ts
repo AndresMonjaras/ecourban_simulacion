@@ -1,4 +1,5 @@
 import type { Vec3 } from "./animacionPersona";
+import urlIntegranteV4 from "../../modelos/persona-piloto/integrante_v4_generado/persona-articulada-integrante-v4.glb?url";
 
 /**
  * Contrato adaptable por modelo GLB.
@@ -52,15 +53,16 @@ export interface PerfilRigPersona {
 }
 
 /**
- * Perfil del avatar `persona-articulada.glb` (70 nodos, 1 skin, 2 mallas, Y-up nativo mirando +Z).
- * Calibrado a escala 0.94 (~1.75 m) para encajar en proporcion con la banca de 1.50 m x 0.45 m.
+ * Integrante EcoUrban v4 con el rig Mixamo compatible con la animacion canonica.
+ * El GLB conserva los nombres y el orden de los 67 huesos; su cadera de reposo
+ * propia se calibra a 0.9795 m para mantener apoyo en pie, marcha y sentado.
  */
 export const PERFIL_ACTION_SUIT: PerfilRigPersona = {
-  id: "action-suit-human",
-  urlModelo: `${import.meta.env.BASE_URL}models/persona-articulada.glb`,
+  id: "integrante-ecourban-v4",
+  urlModelo: urlIntegranteV4,
   rotacionBase: [0, 0, 0],
   escalaAltura: 0.94,
-  alturaCaderaReposo: 1.0192,
+  alturaCaderaReposo: 0.9795,
   offsetY: 0,
   longitudTorsoSuperior: 0.13,
   huesos: {
