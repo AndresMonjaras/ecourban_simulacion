@@ -1,28 +1,46 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import {
   ACESFilmicToneMapping,
   CanvasTexture,
   PMREMGenerator,
   type DirectionalLight,
+  type Group,
   type Mesh,
   type PerspectiveCamera,
 } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { POSE_PERSONA_SENTADA_ESTABLE } from "./animacionPersona";
 import { BancaProceso } from "./BancaProceso";
 import { Desmolde, Recepcion } from "./EstacionesMateria";
 import { Maquila } from "./MaquinaMoldeo";
 import { EstacionesTaller } from "./EstacionesTaller";
 import { ep } from "./lineaProceso";
+import { PERFIL_ACTION_SUIT } from "./perfilRigPersona";
+import { Persona } from "./Persona";
 
 function crearPiso() {
   const c = document.createElement("canvas");
   c.width = c.height = 256;
   const g = c.getContext("2d")!;
   const gr = g.createRadialGradient(128, 128, 8, 128, 128, 126);
-  gr.addColorStop(0, "rgba(22, 26, 27, 1)");
-  gr.addColorStop(0.55, "rgba(14, 17, 18, 0.8)");
-  gr.addColorStop(1, "rgba(8, 9, 10, 0)");
+  // Luz verde templada y semitransparente para apoyar las estaciones sin tapar la reticula del taller.
+  gr.addColorStop(0, "rgba(42, 74, 58, 0.32)");
+  gr.addColorStop(0.55, "rgba(24, 44, 35, 0.16)");
+  gr.addColorStop(1, "rgba(12, 22, 18, 0)");
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 256, 256);
+  return new CanvasTexture(c);
+}
+
+function crearSombraContacto() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 256;
+  const g = c.getContext("2d")!;
+  const gr = g.createRadialGradient(128, 128, 12, 128, 128, 122);
+  gr.addColorStop(0, "rgba(4, 8, 6, 0.56)");
+  gr.addColorStop(0.55, "rgba(4, 8, 6, 0.26)");
+  gr.addColorStop(1, "rgba(4, 8, 6, 0)");
   g.fillStyle = gr;
   g.fillRect(0, 0, 256, 256);
   return new CanvasTexture(c);
@@ -49,6 +67,9 @@ function EntornoEstudio({ lite }: { lite: boolean }) {
 }
 
 const FOV = 35;
+const FOV_PUENTE = 34;
+const TAN_FOV = Math.tan((FOV * Math.PI) / 360);
+const TAN_FOV_PUENTE = Math.tan((FOV_PUENTE * Math.PI) / 360);
 const ASPECTO_BASE = 1.6;
 
 function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
@@ -58,8 +79,13 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
   const frio = useRef<DirectionalLight>(null);
   const piso = useRef<Mesh>(null);
   const sombra = useRef<Mesh>(null);
+  const contacto = useRef<Group>(null);
   const texPiso = useMemo(crearPiso, []);
-  useEffect(() => () => texPiso.dispose(), [texPiso]);
+  const texContacto = useMemo(crearSombraContacto, []);
+  useEffect(() => () => {
+    texPiso.dispose();
+    texContacto.dispose();
+  }, [texPiso, texContacto]);
 
   const { scene } = useThree();
   useEffect(() => {
@@ -79,6 +105,12 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
   useFrame(() => {
     const cam = camera as PerspectiveCamera;
     const aspecto = size.width / Math.max(1, size.height);
+    const w = ep.puente;
+    const fov = FOV + (FOV_PUENTE - FOV) * w;
+    if (Math.abs(cam.fov - fov) > 1e-3) {
+      cam.fov = fov;
+      cam.updateProjectionMatrix();
+    }
     // En pantallas estrechas se aleja la camara para que la banca no se recorte.
     // En escritorio hay sitio para la zona de salida a la derecha de la banca; en vertical se prioriza la banca.
     const lat = aspecto < 1 ? ep.lateral * 0.62 + ep.pdx : ep.lateral;
@@ -89,14 +121,24 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
     if (ep.ancho > 0) {
       // Aleja lo necesario para que el motivo principal quepa de lado a lado (con aire), sin recortarlo.
       const d0 = Math.hypot(ep.px - ep.tx, ep.pz - ep.tz, ep.py - ep.ty) || 1;
-      k = Math.max(k, (ep.ancho * 1.12) / (2 * Math.tan((FOV * Math.PI) / 360) * aspecto * d0));
+      k = Math.max(k, (ep.ancho * 1.12) / (2 * TAN_FOV * aspecto * d0));
     }
-    cam.position.set(tx + (px - tx) * k, ep.ty + (ep.py - ep.ty) * k * (aspecto < 1 ? 0.8 : 1), (ep.pz - ep.tz) * k + ep.tz);
-    if (aspecto < 1) cam.position.y += ep.elev;
+    const pxProc = tx + (px - tx) * k;
+    const pyProc = ep.ty + (ep.py - ep.ty) * k * (aspecto < 1 ? 0.8 : 1) + (aspecto < 1 ? ep.elev : 0);
+    const pzProc = (ep.pz - ep.tz) * k + ep.tz;
+    if (w > 0) {
+      // Iguala exactamente tomaBase(lite) de Escena.tsx durante [0..0.14] y transiciona suave al rig del proceso.
+      const distBase = Math.max(3.4, (lite ? 2.52 : 2.6) / (0.63 * aspecto));
+      const pzBase = distBase * (lite ? 0.94 : 0.96) * (TAN_FOV / TAN_FOV_PUENTE);
+      cam.position.set(pxProc, pyProc + (0.9 - pyProc) * w, pzProc + (pzBase - pzProc) * w);
+    } else {
+      cam.position.set(pxProc, pyProc, pzProc);
+    }
     cam.lookAt(tx, ep.ty, ep.tz);
-    // Sube el encuadre cuando el pie de pagina ocupa la parte baja (movil).
-    const py = Math.round((aspecto < 1 ? 0.1 : 0.05) * size.height);
-    cam.setViewOffset(size.width, size.height, 0, py, size.width, size.height);
+    // Sube el encuadre cuando el pie de pagina ocupa la parte baja (movil), sin desplazar la toma puente.
+    const py = Math.round((aspecto < 1 ? 0.1 : 0.05) * size.height * (1 - w));
+    if (py > 0) cam.setViewOffset(size.width, size.height, 0, py, size.width, size.height);
+    else if (cam.view?.enabled) cam.clearViewOffset();
     cam.updateMatrixWorld();
     const poner = (l: DirectionalLight | null, x: number, y: number, z: number) => {
       if (!l) return;
@@ -109,6 +151,7 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
     poner(borde.current, -2.6, 1.8, -3.2);
     if (piso.current) piso.current.position.x = tx;
     if (sombra.current) sombra.current.position.x = tx;
+    if (contacto.current) contacto.current.visible = reducido || ep.progreso >= 0.025;
   });
 
   return (
@@ -134,13 +177,40 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
         <planeGeometry args={[14, 7]} />
         <meshBasicMaterial map={texPiso} transparent depthWrite={false} />
       </mesh>
+      <group ref={contacto} position={[0, 0.001, 0]} rotation={[0, lite ? -0.34 : -0.42, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[2.3, 0.95, 1]}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial map={texContacto} transparent opacity={0.55} depthWrite={false} />
+        </mesh>
+      </group>
       {!lite && (
         <mesh ref={sombra} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.003, 0]} receiveShadow>
           <planeGeometry args={[10, 5]} />
-          <shadowMaterial transparent opacity={0.4} />
+          <shadowMaterial transparent opacity={0.34} />
         </mesh>
       )}
     </>
+  );
+}
+
+function PuenteBanca({ lite, reducido }: { lite: boolean; reducido: boolean }) {
+  const grupo = useRef<Group>(null);
+  useFrame(() => {
+    if (grupo.current) grupo.current.visible = reducido || ep.progreso >= 0.025;
+  });
+  return (
+    <group ref={grupo}>
+      <BancaProceso x={0} giro={lite ? -0.34 : -0.42} armada lite={lite} />
+      <Suspense fallback={null}>
+        <Persona
+          perfil={PERFIL_ACTION_SUIT}
+          pose={POSE_PERSONA_SENTADA_ESTABLE}
+          posicion={[0, 0, 0]}
+          rotacionY={lite ? -0.34 : -0.42}
+          sombras={!lite}
+        />
+      </Suspense>
+    </group>
   );
 }
 
@@ -150,13 +220,13 @@ export default function EscenaProceso({ lite, reducido }: { lite: boolean; reduc
       frameloop="demand"
       dpr={lite ? [1, 1.25] : [1, 2]}
       shadows="percentage"
-      camera={{ fov: FOV, near: 0.05, far: 60, position: [0.6, 1.1, 4.8] }}
+      camera={{ fov: FOV_PUENTE, near: 0.05, far: 60, position: [0, 0.9, 3.367] }}
       gl={{ antialias: !lite, alpha: true, powerPreference: "high-performance" }}
       aria-hidden="true"
     >
       <Rig lite={lite} reducido={reducido} />
       <EntornoEstudio lite={lite} />
-      <BancaProceso x={0} giro={-0.42} armada lite={lite} />
+      <PuenteBanca lite={lite} reducido={reducido} />
       <Recepcion lite={lite} />
       <Maquila lite={lite} />
       <Desmolde lite={lite} />

@@ -13,11 +13,15 @@ export function useProgresoScroll(
     const el = ref.current;
     if (!el || !activo) return;
     let raf = 0;
+    let ultimo = -1;
     const medir = () => {
       raf = 0;
       const r = el.getBoundingClientRect();
       const recorrido = Math.max(1, r.height - window.innerHeight);
-      alAvanzar(Math.min(1, Math.max(0, -r.top / recorrido)));
+      const p = Math.min(1, Math.max(0, -r.top / recorrido));
+      if (Math.abs(p - ultimo) < 1e-6) return;
+      ultimo = p;
+      alAvanzar(p);
     };
     const pedir = () => {
       if (!raf) raf = requestAnimationFrame(medir);

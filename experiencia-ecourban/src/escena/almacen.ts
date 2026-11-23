@@ -46,6 +46,13 @@ export const almacen = {
   } as Record<GrupoId, number>,
   /** Factor (0..1) de sombra de contacto bajo la banca segun el grado de ensamblaje. */
   sombraContacto: 1,
+  /** Desactiva las sombras de malla mientras la camara hace la orbita inicial pesada. */
+  sombraModelo: true,
+  /** Estado determinista del personaje en el cierre (sin nombres de huesos ni GLB). */
+  persona: {
+    visible: false,
+    progreso: 0,
+  },
   /** Capitulo activo actual derivado del umbral de scroll. */
   capitulo: null as GrupoId | null,
   distancia: 3.6,

@@ -12,12 +12,13 @@ export type HitoId =
   | "enfriamiento"
   | "preparacion"
   | "ensamble"
+  | "carga"
   | "salida"
   | "cierre";
 
 export interface Hito {
   id: HitoId;
-  /** Numero visible ("01/06"); vacio en puente y cierre. */
+  /** Numero visible ("01/07"); vacio en puente y cierre. */
   num: string;
   /** Etiqueta corta visible sobre la escena. */
   etiqueta: string;
@@ -25,6 +26,8 @@ export interface Hito {
   linea: string;
   /** Estatus documental visible sin abrir ninguna ficha. */
   estatus: string;
+  /** Dato destacado en el HUD para hitos que necesitan una cifra legible. */
+  medida?: { valor: string; etiqueta: string };
   /** Apartado de la propuesta que lo respalda. */
   fuente: string;
   /** Icono de IlustracionPaso para el fallback 2D. */
@@ -88,33 +91,44 @@ export const HITOS: readonly Hito[] = [
   },
   {
     id: "ensamble",
-    num: "05/06",
+    num: "05/07",
     etiqueta: "Ensamble mecánico",
     linea: "La banca conceptual se revela armada de abajo a arriba; tornillos y piezas de manufactura son ilustrativos y no constituyen CAD verificado.",
     estatus: "Tornillería inoxidable propuesta · por validar con BOM",
     fuente: "Flujo de Producción y Ensamble: ensamble con tornillería inoxidable",
     icono: "ensamble",
-    tramo: [0.7, 0.82],
+    tramo: [0.7, 0.805],
+  },
+  {
+    id: "carga",
+    num: "06/07",
+    etiqueta: "Prueba de capacidad",
+    linea: "Representación visual de tres cargas de referencia de 100 kg; no representa un ensayo de carga.",
+    estatus: "Capacidad declarada como objetivo · pendiente de ensayo",
+    medida: { valor: "250–300 kg", etiqueta: "DECLARADA · NO ENSAYADA" },
+    fuente: "Propuesta del Proyecto EcoUrban Innovatec, sección 3.1: especificación declarada; no se aportó ensayo.",
+    icono: "ensamble",
+    tramo: [0.805, 0.885],
   },
   {
     id: "salida",
-    num: "06/06",
+    num: "07/07",
     etiqueta: "Inspección final · empaque · despacho",
     linea: "Se revisan dimensión, alineación y acabado; luego, protección y área de salida.",
-    estatus: "Revisión y empaque propuestos · no comprobados",
+    estatus: "Revisión, empaque y despacho propuestos",
     fuente: "Flujo de Producción y Ensamble: inspección, empaque y despacho",
     icono: "entrega",
-    tramo: [0.82, 0.94],
+    tramo: [0.885, 0.965],
   },
   {
     id: "cierre",
     num: "",
     etiqueta: "Flujo propuesto",
-    linea: "Modelo conceptual compuesto de la banca armado, en visualización de referencia. Ninguna etapa está acreditada como operación real.",
-    estatus: "Propuesta · no verificada",
+    linea: "Modelo conceptual de la banca armado. La capacidad de 250–300 kg es declarada y sigue pendiente de ensayo; el flujo mostrado es una propuesta.",
+    estatus: "Capacidad declarada · proceso conceptual no verificado",
     fuente: "Propuesta del Proyecto EcoUrban Innovatec",
     icono: "entrega",
-    tramo: [0.94, 1],
+    tramo: [0.965, 1],
   },
 ];
 

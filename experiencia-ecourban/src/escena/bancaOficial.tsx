@@ -1,5 +1,5 @@
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Box3, Plane, Vector3, Group, type Material, type Mesh, type Object3D } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { almacen } from "./almacen";
@@ -148,7 +148,7 @@ export function BancaOficial({ sombras, revelado = null, registrarPartes = false
   const gl = useThree((st) => st.gl);
   const plano = useMemo(() => new Plane(new Vector3(0, -1, 0), 10), []);
 
-  const { bancaRoot, gruposMap, materiales, alto } = useMemo(() => {
+  const { bancaRoot, gruposMap, materiales, mallas, alto } = useMemo(() => {
     const clon = base.clone(true) as Group;
     const caja = new Box3().setFromObject(clon);
     const centro = caja.getCenter(new Vector3());
@@ -170,12 +170,14 @@ export function BancaOficial({ sombras, revelado = null, registrarPartes = false
 
     const nameMap = new Map<string, Mesh>();
     const materialesList: Material[] = [];
+    const mallasList: Mesh[] = [];
 
     clon.traverse((o: Object3D) => {
       const m = o as Mesh;
       if (m.isMesh) {
         m.material = (m.material as Material).clone();
         materialesList.push(m.material as Material);
+        mallasList.push(m);
         m.castShadow = sombras;
         m.receiveShadow = sombras;
         nameMap.set(normalizarNombreNodo(m.name), m);
@@ -202,6 +204,7 @@ export function BancaOficial({ sombras, revelado = null, registrarPartes = false
       bancaRoot,
       gruposMap,
       materiales: materialesList,
+      mallas: mallasList,
       alto: tam.y,
     };
   }, [base, sombras]);
@@ -233,15 +236,21 @@ export function BancaOficial({ sombras, revelado = null, registrarPartes = false
     };
   }, [gl, materiales, plano, revelado]);
 
+  const ultimoF = useRef(-1);
+  const ultimaSombra = useRef<boolean | null>(null);
+
   useFrame(() => {
-    if (!revelado) return;
-    const f = revelado();
-    plano.constant = f >= 0.999 ? 10 : alto * 1.02 * f;
-    bancaRoot.visible = f > 0.001;
-    bancaRoot.traverse((o) => {
-      const m = o as Mesh;
-      if (m.isMesh) m.castShadow = sombras && f >= 0.999;
-    });
+    const f = revelado ? revelado() : 1;
+    if (revelado && f !== ultimoF.current) {
+      ultimoF.current = f;
+      plano.constant = f >= 0.999 ? 10 : alto * 1.02 * f;
+      bancaRoot.visible = f > 0.001;
+    }
+    const proyectar = sombras && almacen.sombraModelo && (!revelado || f >= 0.999);
+    if (proyectar !== ultimaSombra.current) {
+      ultimaSombra.current = proyectar;
+      for (let i = 0; i < mallas.length; i++) mallas[i].castShadow = proyectar;
+    }
   });
 
   return (

@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { Color, LatheGeometry, Object3D, Vector2, Vector3, type Group, type InstancedMesh } from "three";
 import { aleatorio } from "./fabricasBanca";
 import { caja } from "./geometriasProceso";
@@ -33,12 +33,28 @@ function usePellets(n: number, lite: boolean) {
   return { geo, semillas };
 }
 
-export function Pellets({ n, lite, escribir, semilla }: { n: number; lite: boolean; semilla: number; escribir: (d: Object3D, i: number, s: ReturnType<typeof usePellets>["semillas"][number], i2: number) => boolean }) {
+export function Pellets({
+  n,
+  lite,
+  escribir,
+  semilla,
+  activo,
+  clave,
+}: {
+  n: number;
+  lite: boolean;
+  semilla: number;
+  escribir: (d: Object3D, i: number, s: ReturnType<typeof usePellets>["semillas"][number], i2: number) => boolean;
+  activo?: () => boolean;
+  clave?: () => number;
+}) {
   const malla = useRef<InstancedMesh>(null);
   const { geo, semillas } = usePellets(n, lite);
   const dummy = useMemo(() => new Object3D(), []);
   const variacion = useMemo(() => new Vector3(), []);
+  const ultimaClave = useRef<number | null>(null);
   void semilla;
+  useEffect(() => () => geo.dispose(), [geo]);
   useLayoutEffect(() => {
     const m = malla.current;
     if (!m) return;
@@ -48,6 +64,14 @@ export function Pellets({ n, lite, escribir, semilla }: { n: number; lite: boole
   useFrame(() => {
     const m = malla.current;
     if (!m) return;
+    if (activo && !activo()) {
+      if (m.visible) m.visible = false;
+      return;
+    }
+    if (!m.visible) m.visible = true;
+    const k = clave?.();
+    if (k !== undefined && k === ultimaClave.current) return;
+    if (k !== undefined) ultimaClave.current = k;
     semillas.forEach((s, i) => {
       dummy.position.set(0, 0, 0);
       dummy.rotation.set(0, 0, 0);
@@ -71,7 +95,7 @@ export const X_MAQ = 7.9;
 export function Recepcion({ lite }: { lite: boolean }) {
   const cuchara = useRef<Group>(null);
   const nPila = lite ? 380 : 1500;
-  const nCaida = lite ? 50 : 110;
+  const nFlujo = lite ? 50 : 110;
   const pila = useMemo(() => {
     const r = aleatorio(31);
     const pts = Array.from({ length: nPila }, () => {
@@ -122,7 +146,12 @@ export function Recepcion({ lite }: { lite: boolean }) {
           n={nPila}
           lite={lite}
           semilla={1}
+          activo={() => ep.llenado > 0.005 && Math.abs(ep.tx - X_BANDEJA) < 6.5}
+          clave={() => ep.llenado}
           escribir={(d, i) => {
+            // Los pellets reservados para la animacion forman la capa superior
+            // y se representan en el flujo, para que puedan salir de la pila.
+            if (i >= nPila - nFlujo) return false;
             const p = pila[i];
             const rango = i / nPila;
             const s = tramo(ep.llenado * 1.12, rango * 0.85, rango * 0.85 + 0.12);
@@ -134,15 +163,59 @@ export function Recepcion({ lite }: { lite: boolean }) {
           }}
         />
         <Pellets
-          n={nCaida}
+          n={nFlujo}
           lite={lite}
           semilla={2}
+          activo={() => (ep.caida > 0.005 || ep.traslado > 0.005) && Math.abs(ep.tx - 5.2) < 7}
+          clave={() => ep.caida + ep.traslado * 2}
           escribir={(d, i, s) => {
-            if (ep.caida < 0.015 || ep.caida > 0.985) return false;
-            const fase = (ep.caida * 7 + s.a) % 1;
-            const x0 = -0.5 + s.b * 0.12;
-            d.position.set(x0 + 0.5 * fase * (0.9 + s.c * 0.2) * 0.4 + s.d * 0.06, 1.12 - 0.5 * fase * fase - 0.02, (s.e - 0.5) * 0.2);
-            d.rotation.set(fase * 9 + s.a * 6, s.b * 6, fase * 7);
+            // Cada pellet cae una sola vez, aterriza en su posicion de la pila,
+            // permanece ahi y despues sale escalonadamente hacia la banda.
+            const p = pila[nPila - nFlujo + i];
+            const inicioCaida = 0.12 + s.a * 0.53;
+            const caida = Math.max(0, Math.min(1, (ep.caida - inicioCaida) / 0.35));
+            if (ep.caida < inicioCaida) return false;
+
+            const espera = (i / nFlujo) * 0.34;
+            const avance = Math.max(0, Math.min(1, (ep.traslado - espera) / 0.66));
+            if (ep.traslado > espera && avance >= 1) return false;
+
+            // Nacen en el labio de vertido de la cuchara, ya inclinada sobre la bandeja.
+            const xInicio = -0.18 + s.b * 0.06;
+            const yInicio = 0.9 + s.c * 0.03;
+            const zInicio = (s.d - 0.5) * 0.12;
+            const zBanda = (s.e - 0.5) * 0.2;
+            const caidaSuave = suave(caida);
+            let x = X_BANDEJA + xInicio + (p.x - xInicio) * caidaSuave;
+            const nivelLlenado = Math.min(1, ep.llenado * 1.3);
+            const yAterrizaje = 0.56 + (p.y - 0.56) * nivelLlenado;
+            let y = yInicio + (yAterrizaje - yInicio) * caidaSuave;
+            let z = zInicio + (p.z - zInicio) * caidaSuave;
+
+            if (ep.traslado > espera) {
+              const t = suave(avance);
+              if (avance < 0.22) {
+                const u = suave(avance / 0.22);
+                x = 3.5 + p.x + (4.5 - (3.5 + p.x)) * u;
+                y = p.y + (0.81 - p.y) * u + Math.sin(Math.PI * u) * 0.1;
+                z = p.z + (zBanda - p.z) * u;
+              } else if (avance < 0.92) {
+                const u = (avance - 0.22) / 0.7;
+                x = 4.5 + u * 2.35;
+                y = 0.81 + u * 0.86 + Math.sin(Math.PI * u) * 0.012;
+                z = zBanda;
+              } else {
+                const u = suave((avance - 0.92) / 0.08);
+                x = 6.85 + u * 0.3;
+                y = 1.67 - u * 0.33 - Math.sin(Math.PI * u) * 0.08;
+                z = zBanda * (1 - u);
+              }
+              d.rotation.set(p.rx + t * 7, p.ry + t * 9, p.rz + t * 12);
+            } else {
+              d.rotation.set(p.rx + caidaSuave * 5, p.ry + caidaSuave * 6, p.rz + caidaSuave * 8);
+            }
+
+            d.position.set(x - X_BANDEJA, y, z);
             return true;
           }}
         />
