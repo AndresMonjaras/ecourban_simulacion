@@ -44,6 +44,14 @@ export const almacen = {
     asiento: 0,
     soportes: 0,
   } as Record<GrupoId, number>,
+  /** Pulsos breves del borde holográfico, reversibles al llegar a cada toma. */
+  destello: {
+    respaldo: 0,
+    asiento: 0,
+    soportes: 0,
+  } as Record<GrupoId, number>,
+  /** Progreso normalizado que también controla el barrido del shader holográfico. */
+  progreso: 0,
   /** Factor (0..1) de sombra de contacto bajo la banca segun el grado de ensamblaje. */
   sombraContacto: 1,
   /** Desactiva las sombras de malla mientras la camara hace la orbita inicial pesada. */

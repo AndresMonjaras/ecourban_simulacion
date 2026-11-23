@@ -28,7 +28,7 @@ interface Props {
 }
 
 /**
- * Continuacion "Proceso propuesto". Un solo progreso normalizado del scroll nativo
+ * Continuación del proceso técnico. Un solo progreso normalizado del scroll nativo
  * gobierna la timeline (seek) y el hito activo; no hay controles ni scroll propio.
  */
 export function SeccionFlujo({ webgl, reducido, lite }: Props) {
@@ -107,10 +107,10 @@ export function SeccionFlujo({ webgl, reducido, lite }: Props) {
     return (
       <section className="flujo flujo-lista" aria-labelledby="flujo-titulo">
         <div className="flujo-lista-marco">
+          <p className="flujo-sello"><span className="acento" aria-hidden="true" />{MARCA_PROCESO}</p>
           <h2 id="flujo-titulo">Del material al mobiliario</h2>
           <p className="flujo-nota">
-            Vista 2D de la secuencia propuesta: la escena 3D no se está ejecutando. EcoUrban compraría pellets ya
-            reciclados; la banca es un modelo conceptual de referencia compuesto y las piezas de manufactura son ilustraciones propuestas.
+            Secuencia visual basada en la guía técnica EcoUrban. Los equipos y movimientos se representan mediante modelos 3D procedurales.
           </p>
           <ol className="flujo-pasos">
             {HITOS_NUMERADOS.map((h) => (
@@ -119,9 +119,8 @@ export function SeccionFlujo({ webgl, reducido, lite }: Props) {
                 <span className="flujo-pasos-num">{h.num}</span>
                 <h3>{h.etiqueta}</h3>
                 <p>{h.linea}</p>
-                <p className="flujo-estatus">
-                  <span className="punto" aria-hidden="true" /> {h.estatus}
-                </p>
+                <p className="flujo-estatus"><span className="punto" aria-hidden="true" /> {h.estatus}</p>
+                <small className="flujo-fuente">{h.fuente}</small>
               </li>
             ))}
           </ol>
@@ -134,7 +133,7 @@ export function SeccionFlujo({ webgl, reducido, lite }: Props) {
     <section
       ref={seccion}
       className={reducido ? "flujo alto reducido" : "flujo alto"}
-      aria-label={`${MARCA_PROCESO}: del material al mobiliario`}
+      aria-label={`${MARCA_PROCESO}: diez etapas desde la recepción de pellets hasta la preparación para entrega`}
       data-hito={hito.id}
     >
       <div className="flujo-escenario">
@@ -164,16 +163,8 @@ export function SeccionFlujo({ webgl, reducido, lite }: Props) {
             {hito.num && <p className="flujo-num">{hito.num}</p>}
             <h2 className="flujo-titulo">{hito.etiqueta}</h2>
             <p className="flujo-linea">{hito.linea}</p>
-            {hito.medida ? (
-              <div className="flujo-medida">
-                <strong>{hito.medida.valor}</strong>
-                <span>{hito.medida.etiqueta}</span>
-              </div>
-            ) : (
-              <p className="flujo-estatus">
-                <span className="punto" /> {hito.estatus}
-              </p>
-            )}
+            <p className="flujo-estatus"><span className="punto" /> {hito.estatus}</p>
+            <small className="flujo-fuente">{hito.fuente}</small>
           </div>
         </div>
       </div>

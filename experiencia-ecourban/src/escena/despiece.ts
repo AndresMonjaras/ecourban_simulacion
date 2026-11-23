@@ -289,6 +289,18 @@ export function crearLineaDespiece(escenario: HTMLElement | null, lite: boolean)
     [DURACION, 0, "linear"],
   ]);
 
+  // Un pulso corto del holograma acompaña el momento en que la cámara termina de
+  // enfocar el conjunto descrito por cada ficha; seek lo reproduce también en reversa.
+  encadenar(almacen.destello, "respaldo", [
+    [0, 0, "linear"], [880, 0, "linear"], [920, 1, "outCubic"], [1000, 0, "inOutSine"], [DURACION, 0, "linear"],
+  ]);
+  encadenar(almacen.destello, "asiento", [
+    [0, 0, "linear"], [1670, 0, "linear"], [1710, 1, "outCubic"], [1790, 0, "inOutSine"], [DURACION, 0, "linear"],
+  ]);
+  encadenar(almacen.destello, "soportes", [
+    [0, 0, "linear"], [2450, 0, "linear"], [2490, 1, "outCubic"], [2570, 0, "inOutSine"], [DURACION, 0, "linear"],
+  ]);
+
   // Indicadores de UI y sombra de contacto; la sombra vuelve a su intensidad al ensamblar.
   encadenar(ui, "intro", [
     [0, 0, "linear"],
@@ -325,6 +337,7 @@ export function crearLineaDespiece(escenario: HTMLElement | null, lite: boolean)
   ]);
 
   const aplicar = () => {
+    almacen.progreso = Math.max(0, Math.min(1, ultimoT / DURACION));
     for (const [id, e] of Object.entries(estado)) {
       const o = almacen.partes.get(id);
       o?.position.set(e.x, e.y, e.z);
@@ -372,6 +385,7 @@ export function aplicarPoseEstatica(
   cierre = 0,
 ) {
   const armada = cierre > 0;
+  almacen.progreso = armada ? 0.94 : capitulo === "respaldo" ? 0.29 : capitulo === "asiento" ? 0.50 : capitulo === "soportes" ? 0.71 : 0;
   for (const [id, { p: [x, y, z], rx = 0, rz = 0 }] of Object.entries(despiece(lite))) {
     const o = almacen.partes.get(id);
     if (armada) {

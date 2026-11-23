@@ -3,8 +3,11 @@ import { Suspense, useEffect, useMemo, useRef } from "react";
 import {
   ACESFilmicToneMapping,
   CanvasTexture,
+  Color,
   PMREMGenerator,
   type DirectionalLight,
+  type PointLight,
+  type SpotLight,
   type Group,
   type Mesh,
   type PerspectiveCamera,
@@ -12,12 +15,10 @@ import {
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { POSE_PERSONA_SENTADA_ESTABLE } from "./animacionPersona";
 import { BancaProceso } from "./BancaProceso";
-import { Desmolde, Recepcion } from "./EstacionesMateria";
-import { Maquila } from "./MaquinaMoldeo";
-import { EstacionesTaller } from "./EstacionesTaller";
 import { ep } from "./lineaProceso";
 import { PERFIL_ACTION_SUIT } from "./perfilRigPersona";
 import { Persona } from "./Persona";
+import { EstacionesProcesoOficial } from "./EstacionesProcesoOficial";
 
 function crearPiso() {
   const c = document.createElement("canvas");
@@ -77,6 +78,9 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
   const llave = useRef<DirectionalLight>(null);
   const borde = useRef<DirectionalLight>(null);
   const frio = useRef<DirectionalLight>(null);
+  const foco = useRef<SpotLight>(null);
+  const acento = useRef<PointLight>(null);
+  const tonos = useMemo(() => ({ frio: new Color("#7cc4ff"), calido: new Color("#ff8a3d") }), []);
   const piso = useRef<Mesh>(null);
   const sombra = useRef<Mesh>(null);
   const contacto = useRef<Group>(null);
@@ -89,7 +93,7 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
 
   const { scene } = useThree();
   useEffect(() => {
-    const objetivos = [llave.current, frio.current, borde.current].map((l) => l?.target);
+    const objetivos = [llave.current, frio.current, borde.current, foco.current].map((l) => l?.target);
     objetivos.forEach((t) => t && scene.add(t));
     return () => objetivos.forEach((t) => t && scene.remove(t));
   }, [scene]);
@@ -111,8 +115,7 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
       cam.fov = fov;
       cam.updateProjectionMatrix();
     }
-    // En pantallas estrechas se aleja la camara para que la banca no se recorte.
-    // En escritorio hay sitio para la zona de salida a la derecha de la banca; en vertical se prioriza la banca.
+    // El encuadre responde al ancho requerido por cada estación en escritorio y móvil.
     const lat = aspecto < 1 ? ep.lateral * 0.62 + ep.pdx : ep.lateral;
     const tx = ep.tx + lat;
     const px = ep.px + lat;
@@ -121,7 +124,9 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
     if (ep.ancho > 0) {
       // Aleja lo necesario para que el motivo principal quepa de lado a lado (con aire), sin recortarlo.
       const d0 = Math.hypot(ep.px - ep.tx, ep.pz - ep.tz, ep.py - ep.ty) || 1;
-      k = Math.max(k, (ep.ancho * 1.12) / (2 * TAN_FOV * aspecto * d0));
+      k = Math.max(k, (ep.ancho * (aspecto < 1 ? 1.12 : 1.34)) / (2 * TAN_FOV * aspecto * d0));
+      // En vertical el pie ocupa la parte baja: el equipo debe caber en el alto libre.
+      if (ep.alto > 0) k = Math.max(k, (ep.alto * (aspecto < 1 ? 1.8 : 1.42)) / (2 * TAN_FOV * d0));
     }
     const pxProc = tx + (px - tx) * k;
     const pyProc = ep.ty + (ep.py - ep.ty) * k * (aspecto < 1 ? 0.8 : 1) + (aspecto < 1 ? ep.elev : 0);
@@ -136,8 +141,10 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
     }
     cam.lookAt(tx, ep.ty, ep.tz);
     // Sube el encuadre cuando el pie de pagina ocupa la parte baja (movil), sin desplazar la toma puente.
-    const py = Math.round((aspecto < 1 ? 0.1 : 0.05) * size.height * (1 - w));
-    if (py > 0) cam.setViewOffset(size.width, size.height, 0, py, size.width, size.height);
+    const py = Math.round((aspecto < 0.6 ? 0.075 : aspecto < 1 ? 0.12 : 0.06) * size.height * (1 - w));
+    // En escritorio el motivo se corre a la derecha: la tarjeta del hito ocupa la esquina inferior izquierda.
+    const ox = aspecto >= 1 ? -Math.round(0.1 * size.width * (1 - w)) : 0;
+    if (py > 0 || ox !== 0) cam.setViewOffset(size.width, size.height, ox, py, size.width, size.height);
     else if (cam.view?.enabled) cam.clearViewOffset();
     cam.updateMatrixWorld();
     const poner = (l: DirectionalLight | null, x: number, y: number, z: number) => {
@@ -149,6 +156,18 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
     poner(llave.current, 2.2, 3.6, 3.2);
     poner(frio.current, -3, 0.9, 2);
     poner(borde.current, -2.6, 1.8, -3.2);
+    // Foco cenital y acento de color acompañan a la estación en foco (canales de la timeline).
+    if (foco.current) {
+      foco.current.position.set(tx + 0.4, 4.6, 2.4);
+      foco.current.target.position.set(tx, 0.5, 0);
+      foco.current.target.updateMatrixWorld();
+      foco.current.intensity = ep.focoI * (reducido ? 18 : 26) * (1 - w);
+    }
+    if (acento.current) {
+      acento.current.position.set(ep.tx + ep.acX, ep.acY, ep.acZ);
+      acento.current.color.copy(tonos.frio).lerp(tonos.calido, Math.min(1, Math.max(0, ep.calido)));
+      acento.current.intensity = ep.acI * 3.2;
+    }
     if (piso.current) piso.current.position.x = tx;
     if (sombra.current) sombra.current.position.x = tx;
     if (contacto.current) contacto.current.visible = reducido || ep.progreso >= 0.025;
@@ -163,18 +182,20 @@ function Rig({ lite, reducido }: { lite: boolean; reducido: boolean }) {
         color="#fff3e2"
         castShadow={!lite}
         shadow-mapSize={[1024, 1024]}
-        shadow-camera-left={-2.4}
-        shadow-camera-right={2.4}
-        shadow-camera-top={2.2}
+        shadow-camera-left={-3.4}
+        shadow-camera-right={3.4}
+        shadow-camera-top={3.2}
         shadow-camera-bottom={-1.6}
         shadow-bias={-0.0004}
         shadow-normalBias={0.012}
         shadow-radius={5}
       />
       <directionalLight ref={frio} intensity={0.6} color="#9fb6d8" />
+      <spotLight ref={foco} intensity={0} angle={0.52} penumbra={0.85} distance={14} decay={1.6} color="#fff4e6" />
+      <pointLight ref={acento} intensity={0} distance={6} decay={1.8} />
       <directionalLight ref={borde} intensity={reducido ? 1.2 : 1.7} color="#3fcf93" />
       <mesh ref={piso} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-        <planeGeometry args={[14, 7]} />
+          <planeGeometry args={[24, 10]} />
         <meshBasicMaterial map={texPiso} transparent depthWrite={false} />
       </mesh>
       <group ref={contacto} position={[0, 0.001, 0]} rotation={[0, lite ? -0.34 : -0.42, 0]}>
@@ -227,10 +248,7 @@ export default function EscenaProceso({ lite, reducido }: { lite: boolean; reduc
       <Rig lite={lite} reducido={reducido} />
       <EntornoEstudio lite={lite} />
       <PuenteBanca lite={lite} reducido={reducido} />
-      <Recepcion lite={lite} />
-      <Maquila lite={lite} />
-      <Desmolde lite={lite} />
-      <EstacionesTaller lite={lite} />
+      <EstacionesProcesoOficial lite={lite} />
     </Canvas>
   );
 }

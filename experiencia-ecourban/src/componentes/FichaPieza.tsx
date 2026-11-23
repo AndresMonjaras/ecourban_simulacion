@@ -34,9 +34,6 @@ export function FichaPieza({ ficha, reducido }: Props) {
             <span className="ficha-clave">Función</span> {visible.funcion}
           </p>
           <p className="ficha-material">{visible.material}</p>
-          <p className="ficha-estado">
-            <span aria-hidden="true" className="punto" /> Por validar con BOM · modelo conceptual de referencia compuesto, sin medidas de fabricación verificadas
-          </p>
         </div>
       )}
     </aside>
